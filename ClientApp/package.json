@@ -7,6 +7,7 @@
     "bootstrap": "^5.2.3",
     "browserify-zlib": "^0.2.0",
     "chart.js": "^4.4.6",
+    "chartjs-chart-geo": "^4.3.4",
     "express": "^4.21.1",
     "http-proxy-middleware": "^2.0.6",
     "jquery": "^3.6.4",

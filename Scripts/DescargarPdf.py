@@ -6,11 +6,11 @@ from datetime import datetime, timedelta
 base_url = "http://www.informeseguridad.cns.gob.mx/files/homicidios_{}.pdf"
 
 # Define la fecha de inicio y la fecha de fin
-start_date = datetime(2024, 2, 20)  # Fecha de inicio
-end_date = datetime(2024, 11, 2)   # Fecha de fin
+start_date = datetime(2024, 2, 2)  # Fecha de inicio
+end_date = datetime(2024, 2, 20)   # Fecha de fin
 
 # Especifica el directorio para almacenar los PDFs
-pdf_directory = 'C:\\Users\\leona\\vscode\\ProyectoFisca\\DataPdf'
+pdf_directory = 'C:\\Users\\leona\Documents\\ProyectoFisca\\DataPdf'
 os.makedirs(pdf_directory, exist_ok=True)  # Crea el directorio si no existe
 
 # Itera sobre cada día en el rango de fechas
