@@ -19,7 +19,7 @@ cursor.execute(f"USE {database_name}")
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS Entidad (
         id INT PRIMARY KEY AUTO_INCREMENT,
-        nombre VARCHAR(100) NOT NULL
+        nombre VARCHAR(100) NOT NULL UNIQUE
     )
 """)
 
@@ -28,6 +28,7 @@ cursor.execute("""
         id INT PRIMARY KEY AUTO_INCREMENT,
         nombre VARCHAR(100) NOT NULL,
         entidad_id INT,
+        UNIQUE (nombre, entidad_id),
         FOREIGN KEY (entidad_id) REFERENCES Entidad(id)
     )
 """)
@@ -59,7 +60,9 @@ for csv_file in os.listdir(csv_folder):
         df = pd.read_csv(file_path)
 
         # Asegurar que las columnas necesarias estén presentes
-        expected_columns = ['Entidad', 'Municipio', 'Fecha', 'No de Muertos', 'Hombre', 'Mujer', 'No Identificado', 'Fuente']
+        expected_columns = ['Entidad', 'Municipio', 'Fecha', 
+                            'No de Muertos', 'Hombre', 'Mujer', 
+                            'No Identificado', 'Fuente']
         for col in expected_columns:
             if col not in df.columns:
                 if col == 'Fecha':
@@ -81,7 +84,8 @@ for csv_file in os.listdir(csv_folder):
         df['Fuente'] = df['Fuente'].astype(str).fillna('')
 
         # Insertar entidades
-        for entidad in df['Entidad'].unique():
+        entidad_unica = df['Entidad'].unique()
+        for entidad in entidad_unica:
             cursor.execute("INSERT IGNORE INTO Entidad (nombre) VALUES (%s)", (entidad,))
         connection.commit()
 
@@ -90,9 +94,15 @@ for csv_file in os.listdir(csv_folder):
         entidad_ids = {nombre: id for id, nombre in cursor.fetchall()}
 
         # Insertar municipios
-        for municipio, entidad in zip(df['Municipio'], df['Entidad']):
-            entidad_id = entidad_ids[entidad]
-            cursor.execute("INSERT IGNORE INTO Municipio (nombre, entidad_id) VALUES (%s, %s)", (municipio, entidad_id))
+        #for municipio, entidad in zip(df['Municipio'], df['Entidad']):
+         #   entidad_id = entidad_ids[entidad]
+          #  cursor.execute("INSERT IGNORE INTO Municipio (nombre, entidad_id) VALUES (%s, %s)", (municipio, entidad_id))
+        #connection.commit()
+
+        municipios_unicos = df[['Municipio', 'Entidad']].drop_duplicates()
+        for _, row in municipios_unicos.iterrows():
+            entidad_id = entidad_ids[row['Entidad']]
+            cursor.execute("INSERT IGNORE INTO Municipio (nombre, entidad_id) VALUES (%s, %s)", (row['Municipio'], entidad_id))
         connection.commit()
 
         # Obtener IDs de municipios
@@ -103,7 +113,8 @@ for csv_file in os.listdir(csv_folder):
         for _, row in df.iterrows():
             municipio_id = municipio_ids.get(row['Municipio'])
             cursor.execute("""
-                INSERT INTO Homicidios (municipio_id, fecha, num_muertos, hombres, mujeres, no_identificado, fuente)
+                INSERT INTO Homicidios (municipio_id, fecha, num_muertos,
+                 hombres, mujeres, no_identificado, fuente)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (
                 municipio_id,
