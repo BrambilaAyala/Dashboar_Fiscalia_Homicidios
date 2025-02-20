@@ -22,10 +22,12 @@ mapeo_entidades = {
     "CIUDADDE MÉXICO": "CIUDAD DE MÉXICO",
     "CIUDAD DEMÉXICO": "CIUDAD DE MÉXICO",
     "MICHOACÁN\nDE OCAMPO": "MICHOACÁN DE OCAMPO",
+    "MICHOACÁN": "MICHOACÁN DE OCAMPO",
     "MICHOACAN DE OCAMPO": "MICHOACÁN DE OCAMPO",
     "michoacán de ocampo": "MICHOACÁN DE OCAMPO",
     "MICHOACÁN DEOCAMPO": "MICHOACÁN DE OCAMPO",
     "MICHOACÁN DE\nOCAMPO": "MICHOACÁN DE OCAMPO",
+    "MICHOACÁN\nDE\nOCAMPO": "MICHOACÁN DE OCAMPO",
     "VERACRUZ DE\nIGNACIO DE LA\nLLAVE": "VERACRUZ DE IGNACIO DE LA LLAVE",
     "VERACRUZDE IGNACIODE LA LLAVE": "VERACRUZ DE IGNACIO DE LA LLAVE",
     "VERACRUZ\nDE IGNACIO\nDE LA LLAVE": "VERACRUZ DE IGNACIO DE LA LLAVE",
@@ -36,15 +38,29 @@ mapeo_entidades = {
     "SANLUISPOTOSÍ": "SAN LUIS POTOSÍ",
     "SAN LUIS POTOSÍ": "SAN LUIS POTOSÍ",
     "COAHUILA DE\nZARAGOZA": "COAHUILA DE ZARAGOZA",
+    "COAHUILA\nDE\nZARAGOZA": "COAHUILA DE ZARAGOZA",
     "COAHUILA\nDE ZARAGOZA": "COAHUILA DE ZARAGOZA",
     "COAHUILA DEZARAGOZA": "COAHUILA DE ZARAGOZA",
     "NUEVOLEÓN": "NUEVO LEÓN",
     "NUEVO\nLEÓN": "NUEVO LEÓN",
     "NUEVO LEÓN": "NUEVO LEÓN",
     "NUEVOLEON": "NUEVO LEÓN",
-    "NUEVO\nLEON": "NUEVO LEÓN"
+    "NUEVO\nLEON": "NUEVO LEÓN",
+    "NUEVO": "NUEVO LEÓN",
+    "LEÓN": "NUEVO LEÓN",
+    "DE OCAMPO": "MICHOACÁN DE OCAMPO",
+    "IGNACIO DE LA\nLLAVE": "VERACRUZ DE IGNACIO DE LA LLAVE",
+    "LLAVE": "VERACRUZ DE IGNACIO DE LA LLAVE",
+    "MORELOS\n2)" : "MORELOS",
+    "VERACRUZ DE": "VERACRUZ DE IGNACIO DE LA LLAVE",
+    "VERACRUZ DE\nIGNACIO DE LA LLAVE": "VERACRUZ DE IGNACIO DE LA LLAVE",
+    "VERACRUZ DE IGNACIO\nDE LA LLAVE": "VERACRUZ DE IGNACIO DE LA LLAVE",
+    "VERACRUZ DE IGNACIO DE LA\nLLAVE": "VERACRUZ DE IGNACIO DE LA LLAVE",
+    "VERACRUZ DE\nIGNACIO\nDE LA": "VERACRUZ DE IGNACIO DE LA LLAVE"
 }
 
+# Crear un conjunto de entidades válidas
+entidades_validas = set(df_referencia['ENTIDAD_FEDERATIVA'].str.upper())
 # Ruta a la carpeta con archivos CSV generados
 input_folder = 'C:\\Users\\leona\\Documents\\ProyectoFisca\\Datacsv'
 output_folder = 'C:\\Users\\leona\\Documents\\ProyectoFisca\\Datacsv_normalizados'
@@ -75,6 +91,10 @@ def eliminar_filas_vacias(df):
     df = df.dropna(subset=['Entidad', 'Municipio'], how='all')
     return df
 
+def verificar_entidades(df, entidades_validas):
+    df = df[df['Entidad'].isin(entidades_validas)]
+    return df
+
 
 # Recorre todos los archivos CSV en la carpeta de entrada
 for filename in os.listdir(input_folder):
@@ -89,6 +109,7 @@ for filename in os.listdir(input_folder):
         df = rellenar_entidades_vacias(df)
         df = rellenar_municipios_vacias(df)
         df = eliminar_filas_vacias(df)
+        df = verificar_entidades(df, entidades_validas)
 
         # Guardar el archivo normalizado en la carpeta de salida
         output_path = os.path.join(output_folder, filename)

@@ -50,7 +50,8 @@ def pdf_table_to_csv_with_normalization(pdf_path, csv_path):
     df = pd.DataFrame(data, columns=["Entidad", "Municipio", "Muertos", "Hombre", "Mujer", "No Identificado", "Fuente", "Fecha"])
     
     # Limpieza de datos
-    df = df[~df['Entidad'].isin(['HOMICIDIOS DOLOSOS', 'No de Muertos', 'TOTALES:', 'NO DE MUERTOS'])].reset_index(drop=True)
+    df = df[~df['Entidad'].isin(['HOMICIDIOS DOLOSOS', 'No de Muertos', 'TOTALES:', 'HOMICIDIOS CULPOSOS',
+                                  'NO DE MUERTOS', 'HOMICIDIOS CULPOSOS'])].reset_index(drop=True)
     numeric_columns = ['Muertos', 'Hombre', 'Mujer', 'No Identificado']
     df[numeric_columns] = df[numeric_columns].replace('-', 0)
     df[numeric_columns] = df[numeric_columns].apply(pd.to_numeric, errors='coerce').fillna(0).astype(int)

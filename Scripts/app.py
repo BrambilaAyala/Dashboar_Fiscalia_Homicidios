@@ -2,6 +2,7 @@ import pandas as pd
 import mysql.connector
 import os
 from datetime import datetime
+import re
 
 # Conecta a la base de datos MySQL
 connection = mysql.connector.connect(
@@ -48,6 +49,25 @@ cursor.execute("""
 """)
 connection.commit()
 
+# Cargar el archivo de municipios
+municipios_path = 'C:\\Users\\leona\\Documents\\ProyectoFisca\\MUNICIPIOS_202408.csv'
+df_municipios = pd.read_csv(municipios_path)
+
+# Función para normalizar nombres de municipios
+def normalize_municipio_name(name):
+    if isinstance(name, str):
+        # Eliminar saltos de línea y espacios innecesarios
+        name = re.sub(r'\n', ' ', name).strip()
+        name = re.sub(r'\s+', ' ', name)
+        return name.upper()
+    return name
+
+# Normalizar los nombres de los municipios en el archivo de referencia
+df_municipios['MUNICIPIO'] = df_municipios['MUNICIPIO'].apply(normalize_municipio_name)
+
+# Crear un conjunto de municipios válidos
+municipios_validos = set(df_municipios['MUNICIPIO'])
+
 # Carpeta donde están los CSVs normalizados
 csv_folder = "C:\\Users\\leona\\Documents\\ProyectoFisca\\Datacsv_normalizados"
 
@@ -77,33 +97,42 @@ for csv_file in os.listdir(csv_folder):
 
         # Limpiar y normalizar datos
         df['Entidad'] = df['Entidad'].astype(str).fillna('')
-        df['Municipio'] = df['Municipio'].astype(str).fillna('')
+        df['Municipio'] = df['Municipio'].apply(normalize_municipio_name).fillna('')
         df['No Identificado'] = pd.to_numeric(df['No Identificado'], errors='coerce').fillna(0).astype(int)
         df['Hombre'] = pd.to_numeric(df['Hombre'], errors='coerce').fillna(0).astype(int)
         df['Mujer'] = pd.to_numeric(df['Mujer'], errors='coerce').fillna(0).astype(int)
         df['Fuente'] = df['Fuente'].astype(str).fillna('')
 
+        # Filtrar municipios válidos
+        df = df[df['Municipio'].isin(municipios_validos)]
+
         # Insertar entidades
         entidad_unica = df['Entidad'].unique()
         for entidad in entidad_unica:
-            cursor.execute("INSERT IGNORE INTO Entidad (nombre) VALUES (%s)", (entidad,))
-        connection.commit()
+            #cursor.execute("INSERT IGNORE INTO Entidad (nombre) VALUES (%s)", (entidad,))
+            cursor.execute("SELECT id FROM Entidad WHERE nombre = %s", (entidad,))
+            result = cursor.fetchone()
+
+            if not result:  # Solo insertamos si no existe
+                cursor.execute("INSERT INTO Entidad (nombre) VALUES (%s)", (entidad,))
+        #connection.commit()
+                connection.commit()
 
         # Obtener IDs de entidades
         cursor.execute("SELECT id, nombre FROM Entidad")
         entidad_ids = {nombre: id for id, nombre in cursor.fetchall()}
 
         # Insertar municipios
-        #for municipio, entidad in zip(df['Municipio'], df['Entidad']):
-         #   entidad_id = entidad_ids[entidad]
-          #  cursor.execute("INSERT IGNORE INTO Municipio (nombre, entidad_id) VALUES (%s, %s)", (municipio, entidad_id))
-        #connection.commit()
-
         municipios_unicos = df[['Municipio', 'Entidad']].drop_duplicates()
         for _, row in municipios_unicos.iterrows():
             entidad_id = entidad_ids[row['Entidad']]
-            cursor.execute("INSERT IGNORE INTO Municipio (nombre, entidad_id) VALUES (%s, %s)", (row['Municipio'], entidad_id))
-        connection.commit()
+            cursor.execute("SELECT id FROM Municipio WHERE nombre = %s AND entidad_id = %s", (row['Municipio'], entidad_id))
+            #cursor.execute("INSERT IGNORE INTO Municipio (nombre, entidad_id) VALUES (%s, %s)", (row['Municipio'], entidad_id))
+            result = cursor.fetchone()
+    
+            if not result:  # Solo insertamos si no existe
+                cursor.execute("INSERT INTO Municipio (nombre, entidad_id) VALUES (%s, %s)", (row['Municipio'], entidad_id))
+                connection.commit()
 
         # Obtener IDs de municipios
         cursor.execute("SELECT id, nombre FROM Municipio")

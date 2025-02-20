@@ -7,7 +7,7 @@ base_url = "http://www.informeseguridad.cns.gob.mx/files/homicidios_{}.pdf"
 
 # Define la fecha de inicio y la fecha de fin
 start_date = datetime(2024, 2, 2)  # Fecha de inicio
-end_date = datetime(2024, 2, 20)   # Fecha de fin
+end_date = datetime(2024, 4, 20)   # Fecha de fin
 
 # Especifica el directorio para almacenar los PDFs
 pdf_directory = 'C:\\Users\\leona\Documents\\ProyectoFisca\\DataPdf'
