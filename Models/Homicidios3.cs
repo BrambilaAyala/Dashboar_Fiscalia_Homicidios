@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ProyectoFisca.Models
 {
-    public class Homicidios3
+    public class Homicidios
     {
         public int Id { get; set; }  // Clave primaria
         public int Municipio_Id { get; set; }

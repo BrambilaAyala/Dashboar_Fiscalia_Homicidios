@@ -14,6 +14,6 @@ namespace ProyectoFisca.Data
 
         public DbSet<Entidad>? Entidad { get; set; }
         public DbSet<Municipio>? Municipio { get; set; }
-        public DbSet<Homicidios3>? Homicidios3 { get; set; }  
+        public DbSet<Homicidios>? Homicidios { get; set; }  
     }
 }

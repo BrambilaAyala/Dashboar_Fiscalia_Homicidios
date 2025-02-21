@@ -55,7 +55,7 @@ export class Fisca extends Component {
                 </tr>
               </thead>
               <tbody>
-                {this.state.datosHomicidios.slice(0, 30).map((item, index) => (
+                {this.state.datosHomicidios.slice(0, 32).map((item, index) => (
                   <tr key={index}>
                     <td>{item.municipio}</td>
                     <td>{item.entidad}</td>

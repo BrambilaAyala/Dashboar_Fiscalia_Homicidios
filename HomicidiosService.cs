@@ -20,14 +20,14 @@ public class HomicidiosService
     {
         try
         {
-            var query = _context.Homicidios3
+            var query = _context.Homicidios
                 ?.Include(h => h.Municipio)
                 .ThenInclude(m => m.Entidad)
                 .Take(20); // Limitar los resultados a 20 registros
 
             if (query == null)
             {
-                throw new InvalidOperationException("Homicidios3 is null.");
+                throw new InvalidOperationException("Homicidios is null.");
             }
 
             return await query.Select(h => new HomicidiosViewModel
