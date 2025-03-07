@@ -5,6 +5,7 @@ import { FiscaOcr } from "./components/FiscaOcr";
 import { Home } from "./components/Home";
 import { PruebaDash } from "./components/PruebaDash";
 import { Graphs } from "./components/Graphs";
+//import Graphs from './components/Graphs';
 import { PruebaMapa } from "./components/pruebaMapa";
 import  Homicidios  from './components/Homicidios';
 
