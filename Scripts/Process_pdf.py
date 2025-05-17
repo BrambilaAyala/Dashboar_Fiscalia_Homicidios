@@ -42,10 +42,20 @@ def pdf_table_to_csv_with_normalization(pdf_path, csv_path):
             for table in tables:
                 for row in table:
                     if row and row[0] not in ["Entidad", "Municipio", "Muertos", "Hombre", "Mujer", "No Identificado", "Fuente"]:
+<<<<<<< HEAD
                         row[0] = normalize_text(row[0].upper() if isinstance(row[0], str) else row[0])
                         row[1] = row[1].upper() if isinstance(row[1], str) else row[1]
                         row.append(date_obj)
                         data.append(row)
+=======
+                        if len(row) == 7:
+                            row[0] = normalize_text(row[0].upper() if isinstance(row[0], str) else row[0])
+                            row[1] = row[1].upper() if isinstance(row[1], str) else row[1]
+                            row.append(date_obj)
+                            data.append(row)
+                        else:
+                            print(f"Error en la cantidad de columnas ({len(row)}): {row}")
+>>>>>>> 7f909d8 (Correcion de graficas por trimestre)
 
     df = pd.DataFrame(data, columns=["Entidad", "Municipio", "Muertos", "Hombre", "Mujer", "No Identificado", "Fuente", "Fecha"])
     

@@ -27,3 +27,5 @@ Aplicacion web para la visualizacion de los homicidios dolosos en los entidades 
 1. Dar clic en `Run project`.
 2. Te saldran mensaje en la esquina inferior derecha, para que descargues las librerias necesarias.
 3. 
+
+# Dashboard_Fiscalia_Homicidios

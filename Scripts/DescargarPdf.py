@@ -6,7 +6,11 @@ from datetime import datetime, timedelta
 base_url = "http://www.informeseguridad.cns.gob.mx/files/homicidios_{}.pdf"
 
 # Define la fecha de inicio y la fecha de fin
+<<<<<<< HEAD
 start_date = datetime(2024, 2, 2)  # Fecha de inicio
+=======
+start_date = datetime(2022, 2, 2)  # Fecha de inicio
+>>>>>>> 7f909d8 (Correcion de graficas por trimestre)
 end_date = datetime(2024, 4, 20)   # Fecha de fin
 
 # Especifica el directorio para almacenar los PDFs

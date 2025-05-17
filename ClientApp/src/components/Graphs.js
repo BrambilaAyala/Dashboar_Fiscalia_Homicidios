@@ -1,20 +1,23 @@
 import React, { Component } from 'react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid, AreaChart, Area } from 'recharts';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid, AreaChart, Area } from 'recharts';
 
 export class Graphs extends Component {
   static displayName = Graphs.name;
 
   constructor(props) {
     super(props);
-    this.state = { 
-      datosHomicidios: [], 
-      loading: true, 
-      variableSeleccionada: 'num_Muertos' 
+    this.state = {
+      datosHomicidios: [],
+      datosHomicidiosPorTrimestre: [],
+      loading: true,
+      variableSeleccionada: 'num_Muertos',
+      añoSeleccionado: '' // <- nuevo estado para filtro por año
     };
   }
 
   componentDidMount() {
     this.fetchData();
+    this.fetchDataPorTrimestre();
   }
 
   async fetchData() {
@@ -28,12 +31,33 @@ export class Graphs extends Component {
       if (!response.ok) throw new Error('Network response was not ok');
 
       const data = await response.json();
-      console.log('Datos recibidos:', data);
-      this.setState({ datosHomicidios: data, loading: false });
+      const datosOrdenados = data.sort((a, b) => new Date(a.Fecha) - new Date(b.Fecha));
+      console.log('Datos recibidos:', datosOrdenados);
+      this.setState({ datosHomicidios: datosOrdenados, loading: false });
 
     } catch (error) {
       console.error('Error en la petición:', error);
       this.setState({ datosHomicidios: [], loading: false });
+    }
+  }
+
+  async fetchDataPorTrimestre() {
+    try {
+      const response = await fetch('https://localhost:44497/LectorPdf/homicidios-por-trimestre', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+
+      if (!response.ok) throw new Error('Network response was not ok');
+
+      const data = await response.json();
+      console.log('Datos por trimestre recibidos:', data);
+      this.setState({ datosHomicidiosPorTrimestre: data });
+
+    } catch (error) {
+      console.error('Error en la petición:', error);
+      this.setState({ datosHomicidiosPorTrimestre: [] });
     }
   }
 
@@ -42,8 +66,8 @@ export class Graphs extends Component {
   };
 
   render() {
-    const { datosHomicidios, loading, variableSeleccionada } = this.state;
-    
+    const { datosHomicidios, datosHomicidiosPorTrimestre, loading, variableSeleccionada, añoSeleccionado } = this.state;
+
     const opciones = [
       { key: 'num_Muertos', label: 'Total Homicidios' },
       { key: 'hombres', label: 'Hombres' },
@@ -52,11 +76,21 @@ export class Graphs extends Component {
       { key: 'diferencia', label: 'Diferencia (Hombres - Mujeres)' },
       { key: 'comparacion', label: 'Comparación de los datos' }
     ];
-    
+
     const datosConDiferencia = datosHomicidios.map(item => ({
       ...item,
       diferencia: (item.hombres ?? 0) - (item.mujeres ?? 0)
     }));
+
+    // 🔎 Obtener los años únicos disponibles
+    const añosDisponibles = [...new Set(datosHomicidiosPorTrimestre.map(d => d.trimestre.split('-')[0]))];
+
+    // 📊 Filtrar por año si se seleccionó uno
+    const datosFiltradosPorAño = añoSeleccionado
+    ? datosHomicidiosPorTrimestre.filter(d => d.trimestre.startsWith(añoSeleccionado))
+    : datosHomicidiosPorTrimestre;
+  
+  
 
     return (
       <div>
@@ -69,12 +103,12 @@ export class Graphs extends Component {
                 <option key={opcion.key} value={opcion.key}>{opcion.label}</option>
               ))}
             </select>
-    
+
             <ResponsiveContainer width="100%" height={400}>
               {variableSeleccionada === 'diferencia' ? (
                 <AreaChart data={datosConDiferencia} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="Entidad" />
+                  <XAxis dataKey="fecha" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
@@ -83,25 +117,50 @@ export class Graphs extends Component {
               ) : variableSeleccionada === 'comparacion' ? (
                 <LineChart data={datosConDiferencia} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="Entidad" />
+                  <XAxis dataKey="fecha" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
                   <Line type="monotone" dataKey="hombres" stroke="#8884d8" name="Hombres" />
                   <Line type="monotone" dataKey="mujeres" stroke="#29c22b" name="Mujeres" />
                   <Line type="monotone" dataKey="no_Identificado" stroke="#c22930" name="No Identificado" />
-                  
                 </LineChart>
               ) : (
                 <LineChart data={datosConDiferencia} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="Entidad" />
+                  <XAxis dataKey="fecha" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
                   <Line type="monotone" dataKey={variableSeleccionada} stroke="#8884d8" name={opciones.find(op => op.key === variableSeleccionada)?.label} />
                 </LineChart>
               )}
+            </ResponsiveContainer>
+          </>
+        )}
+
+        <h1>Homicidios por Trimestre (Últimos tres años)</h1>
+        {!loading && (
+          <>
+            <label>Selecciona el año: </label>
+            <select value={añoSeleccionado} onChange={(e) => this.setState({ añoSeleccionado: e.target.value })}>
+              <option value="">Todos</option>
+              {añosDisponibles.map(año => (
+                <option key={año} value={año}>{año}</option>
+              ))}
+            </select>
+
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={datosFiltradosPorAño} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="trimestre" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="hombres" fill="#8884d8" name="Hombres" />
+                <Bar dataKey="mujeres" fill="#29c22b" name="Mujeres" />
+                <Bar dataKey="no_Identificado" fill="#c22930" name="No Identificado" />
+              </BarChart>
             </ResponsiveContainer>
           </>
         )}
