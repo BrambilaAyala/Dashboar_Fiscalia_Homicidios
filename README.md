@@ -1,6 +1,8 @@
 ﻿# Dashboard_Fiscalia_Homicidios
 Aplicacion web para la visualizacion de los homicidios dolosos en los entidades de Mexico, y en sus municipios, para tener un conteo y patrones de los homicidios utilizando Vs Code, react, node.js y MySql.
 
+Se utilizo como Pre-Procesamiento Python, para la limpieza de los documentos .csv.
+
 # Herramientas.
 - VS Code.
 - MySQL.
