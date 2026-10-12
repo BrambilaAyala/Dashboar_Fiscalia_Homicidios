@@ -1,0 +1,293 @@
+@page
+@model ProyectoFisca.Pages.IndexModel
+@{
+    ViewData["Title"] = "Panel Ejecutivo";
+}
+
+<div class="mb-4">
+    <!-- HERO HEADER CON LOGOS INSTITUCIONALES (Basado en Home.js) -->
+    <div class="card border-0 mb-4 overflow-hidden shadow-sm" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 12px;">
+        <div class="card-body p-4 p-md-5 text-white">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-4">
+                <div style="flex: 1 1 500px;">
+                    <span class="badge mb-3 px-3 py-2 text-uppercase fw-bold" style="background-color: rgba(220, 38, 38, 0.25); color: #fca5a5; letter-spacing: 0.8px; font-size: 0.75rem;">
+                        SSPC • SAT • Fiscalía General • INEGI
+                    </span>
+                    <h1 class="h3 fw-bold mb-2 text-white" style="line-height: 1.25;">
+                        Sistema de Monitoreo Forense e Inteligencia de Homicidios Dolosos
+                    </h1>
+                    <p class="text-slate-300 mb-0 small" style="max-width: 650px; line-height: 1.6; color: #cbd5e1;">
+                        Plataforma tecnológica orientada al análisis criminológico, detección de patrones de violencia y recopilación de reportes diarios oficiales del Gobierno de México (2023 - 2026).
+                    </p>
+                </div>
+
+                <div class="d-flex align-items-center gap-3 px-4 py-3 rounded" style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <img src="/Unison.png" alt="Universidad de Sonora" style="height: 60px; object-fit: contain;" />
+                    <div style="width: 1px; height: 45px; background: rgba(255, 255, 255, 0.2);"></div>
+                    <img src="/gob.png" alt="Gobierno de México" style="height: 42px; object-fit: contain;" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indicadores Clave (KPIs) -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card border-top border-3 border-danger">
+                <div class="stat-label">Total de Víctimas</div>
+                <div class="stat-value text-danger">@Model.TotalMuertos.ToString("N0")</div>
+                <div class="stat-help">En @Model.TotalMunicipios municipios y @Model.TotalEntidades entidades</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card border-top border-3 border-primary">
+                <div class="stat-label">Víctimas Hombres</div>
+                <div class="stat-value text-primary">@Model.TotalHombres.ToString("N0")</div>
+                <div class="d-flex align-items-center">
+                    <div class="progress flex-grow-1 me-2" style="height: 5px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: @Model.PorcentajeHombres%"></div>
+                    </div>
+                    <span class="small fw-semibold text-primary">@Model.PorcentajeHombres%</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card border-top border-3 border-warning">
+                <div class="stat-label">Víctimas Mujeres</div>
+                <div class="stat-value text-warning">@Model.TotalMujeres.ToString("N0")</div>
+                <div class="d-flex align-items-center">
+                    <div class="progress flex-grow-1 me-2" style="height: 5px;">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: @Model.PorcentajeMujeres%"></div>
+                    </div>
+                    <span class="small fw-semibold text-warning">@Model.PorcentajeMujeres%</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card border-top border-3 border-secondary">
+                <div class="stat-label">No Identificados</div>
+                <div class="stat-value text-secondary">@Model.TotalNoIdentificado.ToString("N0")</div>
+                <div class="d-flex align-items-center">
+                    <div class="progress flex-grow-1 me-2" style="height: 5px;">
+                        <div class="progress-bar bg-secondary" role="progressbar" style="width: @Model.PorcentajeNoIdentificado%"></div>
+                    </div>
+                    <span class="small fw-semibold text-secondary">@Model.PorcentajeNoIdentificado%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MÓDULOS DE ANÁLISIS Y VISUALIZACIÓN (3 Módulos sin Homicidios) -->
+    <div class="mb-4">
+        <h5 class="fw-bold text-slate-800 mb-3">Módulos de Análisis y Visualización</h5>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <a href="/Map" class="text-decoration-none">
+                    <div class="card card-clean h-100 p-4 border-top border-4 border-primary">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fs-3">🗺️</span>
+                            <span class="badge badge-soft-primary small fw-semibold">Exploración Geoespacial</span>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-2">Mapa Geográfico Nacional</h6>
+                        <p class="text-secondary small mb-3">
+                            Visualización coroplética interactiva y térmica de las 32 entidades. Alterna entre cantidad de homicidios, censo de población INEGI y tasa por habitante.
+                        </p>
+                        <div class="mt-auto text-primary small fw-bold">
+                            Ingresar al mapa &rarr;
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-4">
+                <a href="/Graphs" class="text-decoration-none">
+                    <div class="card card-clean h-100 p-4 border-top border-4 border-danger">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fs-3">📊</span>
+                            <span class="badge badge-soft-danger small fw-semibold">Tendencias y Género</span>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-2">Analítica y Series de Tiempo</h6>
+                        <p class="text-secondary small mb-3">
+                            Comparativas multianuales históricas (2023-2026), estacionalidad por trimestre, proporciones de género y filtros dinámicos por año.
+                        </p>
+                        <div class="mt-auto text-danger small fw-bold">
+                            Ver series temporales &rarr;
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-4">
+                <a href="/Fisca" class="text-decoration-none">
+                    <div class="card card-clean h-100 p-4 border-top border-4 border-success">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fs-3">📋</span>
+                            <span class="badge badge-soft-success small fw-semibold">Registros Forenses</span>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-2">Centro de Inteligencia (Fisca)</h6>
+                        <p class="text-secondary small mb-3">
+                            Base forense municipal detallada, gráficos de focos de incidencia, extracción automatizada de boletines oficiales y exportación a CSV.
+                        </p>
+                        <div class="mt-auto text-success small fw-bold">
+                            Consultar registros &rarr;
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ARQUITECTURA DEL PIPELINE DE INTELIGENCIA (100% C# .NET) -->
+    <div class="card card-clean p-4 mb-4">
+        <h6 class="fw-bold text-slate-800 mb-3">
+            ⚙️ Arquitectura del Pipeline de Inteligencia (100% C# .NET)
+        </h6>
+        <div class="row g-3 text-center">
+            <div class="col-sm-6 col-lg-3">
+                <div class="p-3 rounded h-100" style="background-color: #f1f5f9; border: 1px solid #e2e8f0;">
+                    <div class="fs-4 mb-2">🌐</div>
+                    <div class="fw-bold small text-dark">1. Ingesta Directa</div>
+                    <p class="text-secondary mt-1 mb-0" style="font-size: 0.8rem;">
+                        Descarga automatizada vía HTTP de los reportes diarios PDF del CNS / SSPC.
+                    </p>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="p-3 rounded h-100" style="background-color: #f1f5f9; border: 1px solid #e2e8f0;">
+                    <div class="fs-4 mb-2">🧠</div>
+                    <div class="fw-bold small text-dark">2. Inferencia Forense</div>
+                    <p class="text-secondary mt-1 mb-0" style="font-size: 0.8rem;">
+                        Normalizador difuso (Jaro-Winkler) y deducción inversa por catálogo de municipios.
+                    </p>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="p-3 rounded h-100" style="background-color: #f1f5f9; border: 1px solid #e2e8f0;">
+                    <div class="fs-4 mb-2">🗄️</div>
+                    <div class="fw-bold small text-dark">3. Persistencia Relacional</div>
+                    <p class="text-secondary mt-1 mb-0" style="font-size: 0.8rem;">
+                        Almacenamiento en MySQL mediante capa DataAccess con integridad referencial INEGI.
+                    </p>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="p-3 rounded h-100" style="background-color: #f1f5f9; border: 1px solid #e2e8f0;">
+                    <div class="fs-4 mb-2">📊</div>
+                    <div class="fw-bold small text-dark">4. Analítica Ejecutiva</div>
+                    <p class="text-secondary mt-1 mb-0" style="font-size: 0.8rem;">
+                        Vistas optimizadas en Razor Pages (.cshtml) con Leaflet, Chart.js y TopoJSON.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FICHA ACADÉMICA Y NOMBRES DEL EQUIPO DE DESARROLLO (Requerido) -->
+    <div class="card card-clean p-4 mb-4" style="background-color: #f8fafc; border: 1px solid #cbd5e1;">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h6 class="fw-bold text-dark mb-1">Universidad de Sonora (UNISON)</h6>
+                <p class="text-secondary small mb-0">
+                    Licenciatura en Ciencias de la Computación • Clase: Análisis y Diseño Orientado a Objetos (2024-2)
+                </p>
+            </div>
+
+            <div>
+                <div class="text-secondary small fw-bold text-uppercase mb-2">Equipo de Desarrollo:</div>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge bg-white text-dark border px-3 py-2 fw-medium shadow-sm" style="font-size: 0.85rem;">
+                        👤 Leonardo Brambila Ayala
+                    </span>
+                    <span class="badge bg-white text-dark border px-3 py-2 fw-medium shadow-sm" style="font-size: 0.85rem;">
+                        👤 Aldo Rafael Guzmán Villanueva
+                    </span>
+                    <span class="badge bg-white text-dark border px-3 py-2 fw-medium shadow-sm" style="font-size: 0.85rem;">
+                        👤 Francisco Javier Atondo Nubes
+                    </span>
+                    <span class="badge bg-white text-dark border px-3 py-2 fw-medium shadow-sm" style="font-size: 0.85rem;">
+                        👤 Manuel Alejandro Heredia Nogales
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tablas de Incidentes Recientes y Entidades -->
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card card-clean overflow-hidden">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center border-bottom" style="background-color: #f1f5f9; border-color: #cbd5e1 !important;">
+                    <h6 class="fw-bold mb-0 text-slate-800">Incidentes Recientes</h6>
+                    <a href="/Fisca" class="small text-primary text-decoration-none fw-semibold">Ver todos los registros</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-clean table-hover">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Entidad</th>
+                                <th>Municipio</th>
+                                <th class="text-center">Víctimas</th>
+                                <th class="text-center">H</th>
+                                <th class="text-center">M</th>
+                                <th class="text-center">N/I</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.UltimosHomicidios.Any())
+                            {
+                                @foreach (var h in Model.UltimosHomicidios)
+                                {
+                                    <tr>
+                                        <td class="text-nowrap small text-secondary">@h.Fecha</td>
+                                        <td><span class="badge badge-soft-secondary">@h.Entidad</span></td>
+                                        <td class="fw-medium text-dark">@h.Municipio</td>
+                                        <td class="text-center">
+                                            <span class="badge badge-soft-danger fw-bold">@h.Num_Muertos</span>
+                                        </td>
+                                        <td class="text-center small text-primary">@h.Hombres</td>
+                                        <td class="text-center small text-warning">@h.Mujeres</td>
+                                        <td class="text-center small text-secondary">@h.No_Identificado</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted small">No hay registros disponibles.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card card-clean overflow-hidden">
+                <div class="card-header py-3 border-bottom" style="background-color: #f1f5f9; border-color: #cbd5e1 !important;">
+                    <h6 class="fw-bold mb-0 text-slate-800">Entidades con Mayor Incidencia</h6>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var ent in Model.TopEntidades)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                <div>
+                                    <div class="fw-semibold text-dark small">@ent.Entidad</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">
+                                        H: @ent.Hombres | M: @ent.Mujeres | N/I: @ent.No_Identificado
+                                    </div>
+                                </div>
+                                <span class="badge badge-soft-danger fw-bold fs-7">@ent.Num_Muertos</span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+                <div class="card-footer py-2 text-center border-top" style="background-color: #f1f5f9; border-color: #cbd5e1 !important;">
+                    <a href="/Map" class="small text-decoration-none fw-medium text-primary">Ver mapa completo &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

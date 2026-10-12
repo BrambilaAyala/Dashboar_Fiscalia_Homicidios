@@ -1,0 +1,2 @@
+# Este archivo asegura que la carpeta DataPdf exista al clonar el repositorio.
+# Los archivos PDF descargados en esta carpeta se ignoran en .gitignore.

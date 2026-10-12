@@ -1,0 +1,495 @@
+@page
+@model ProyectoFisca.Pages.MapModel
+@{
+    ViewData["Title"] = "Cartografía Forense y Poblacional";
+}
+
+<div class="mb-4">
+    <!-- Encabezado con Paleta Relajada -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center pb-3 mb-3 border-bottom" style="border-color: #cbd5e1 !important;">
+        <div>
+            <h2 class="h4 fw-bold text-slate-900 mb-1">Cartografía y Distribución Geoespacial</h2>
+            <p class="text-secondary small mb-0">Visualización interactiva por cantidad de homicidios, censo de población INEGI y tasa por habitante.</p>
+        </div>
+        <!-- Selector Interactivo de Modo Requerido -->
+        <div class="btn-group btn-group-sm mt-2 mt-sm-0" role="group" aria-label="Modo de Mapa">
+            <button type="button" id="btnModoHomicidios" class="btn btn-primary active fw-medium px-3" onclick="cambiarModo('homicidios')">
+                Cantidad de Homicidios
+            </button>
+            <button type="button" id="btnModoPoblacion" class="btn btn-outline-secondary fw-medium px-3" onclick="cambiarModo('poblacion')">
+                Población (INEGI)
+            </button>
+            <button type="button" id="btnModoTasa" class="btn btn-outline-secondary fw-medium px-3" onclick="cambiarModo('tasa')">
+                Tasa por 100k Hab.
+            </button>
+        </div>
+    </div>
+
+    <!-- Indicadores Rápidos -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-4">
+            <div class="stat-card border-top border-3 border-danger">
+                <div class="stat-label">Total de Homicidios Dolosos</div>
+                <div class="stat-value text-danger">@Model.GranTotalMuertos.ToString("N0")</div>
+                <div class="stat-help">Registros oficiales en las 32 entidades</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-4">
+            <div class="stat-card border-top border-3 border-primary">
+                <div class="stat-label">Población Nacional Censada</div>
+                <div class="stat-value text-primary">@Model.GranTotalPoblacion.ToString("N0")</div>
+                <div class="stat-help">Censo oficial INEGI / CONAPO</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-4">
+            <div class="stat-card border-top border-3 border-warning">
+                <div class="stat-label">Tasa Promedio Global</div>
+                @{
+                    double tasaPromedio = Model.GranTotalPoblacion > 0 ? Math.Round(((double)Model.GranTotalMuertos / Model.GranTotalPoblacion) * 100000.0, 2) : 0;
+                }
+                <div class="stat-value text-warning">@tasaPromedio</div>
+                <div class="stat-help">Víctimas por cada 100,000 habitantes</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mapa Leaflet Ampliado (Pantalla Completa y Mayor Altura para Máxima Visibilidad) -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card card-clean overflow-hidden">
+                <div class="card-header py-3 border-bottom d-flex justify-content-between align-items-center" style="background-color: #f1f5f9; border-color: #cbd5e1 !important;">
+                    <div class="d-flex align-items-center gap-2">
+                        <span id="mapaTitulo" class="fw-bold text-dark small text-uppercase">Mapa de Calor: Incidencia de Homicidios</span>
+                    </div>
+                    <span id="mapaLeyenda" class="badge badge-soft-danger">Escala por Volumen Delictivo</span>
+                </div>
+                <div class="card-body p-0 position-relative">
+                    <div id="mapLeaflet" style="height: 720px; width: 100%; background: #e2e8f0;"></div>
+                </div>
+                <div class="card-footer py-2 px-3 border-top small text-secondary d-flex justify-content-between align-items-center" style="background-color: #f1f5f9; border-color: #cbd5e1 !important;">
+                    <span>Haga clic en cualquier estado o sitúe el cursor sobre él para ver su ficha forense y demográfica en detalle.</span>
+                    <span id="mapaIndicadorModo" class="fw-semibold text-primary">Modo Homicidios Activo</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tablas Complementarias Debajo del Mapa (2 Columnas Equilibradas) -->
+    <div class="row g-4">
+        <!-- Tabla Estatal Interactiva (Reacciona al Modo) -->
+        <div class="col-lg-6">
+            <div class="card card-clean overflow-hidden h-100">
+                <div class="card-header py-3 border-bottom d-flex justify-content-between align-items-center" style="background-color: #f1f5f9; border-color: #cbd5e1 !important;">
+                    <h6 id="tituloTablaEstatal" class="fw-bold mb-0 text-slate-800">Ranking por Entidad Federativa</h6>
+                    <span class="badge badge-soft-secondary">32 Estados</span>
+                </div>
+                <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                    <table id="tablaRankingEntidades" class="table table-clean table-sm table-hover mb-0">
+                        <thead class="sticky-top">
+                            <tr>
+                                <th>Entidad</th>
+                                <th id="columnaMetricaHeader" class="text-center">Víctimas</th>
+                                <th id="columnaSecundariaHeader" class="text-center">% Nacional</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyRankingEntidades">
+                            <!-- Poblado dinámicamente según el modo seleccionado -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Municipios con Mayor Incidencia -->
+        <div class="col-lg-6">
+            <div class="card card-clean overflow-hidden h-100">
+                <div class="card-header py-3 border-bottom d-flex justify-content-between align-items-center" style="background-color: #f1f5f9; border-color: #cbd5e1 !important;">
+                    <h6 class="fw-bold mb-0 text-slate-800">Top 15 Municipios Críticos</h6>
+                    <span class="badge badge-soft-danger">Mayor Incidencia</span>
+                </div>
+                <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                    <table class="table table-clean table-sm table-hover mb-0">
+                        <thead class="sticky-top">
+                            <tr>
+                                <th>#</th>
+                                <th>Municipio</th>
+                                <th>Entidad</th>
+                                <th class="text-center">Víctimas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int idx = 1; }
+                            @foreach (var m in Model.TopMunicipios)
+                            {
+                                <tr>
+                                    <td class="small text-muted">@(idx++)</td>
+                                    <td class="fw-medium text-dark">@m.Municipio</td>
+                                    <td><span class="badge badge-soft-secondary" style="font-size: 0.72rem;">@m.Entidad</span></td>
+                                    <td class="text-center">
+                                        <span class="badge badge-soft-danger fw-bold">@m.Num_Muertos</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const entidades = @Html.Raw(Model.EntidadesJson);
+    let modoActual = 'homicidios'; // 'homicidios', 'poblacion', 'tasa'
+
+    // Coordenadas geográficas oficiales de las 32 entidades federativas
+    const coordsEntidades = {
+        "AGUASCALIENTES": [21.8853, -102.2916],
+        "BAJA CALIFORNIA": [30.8406, -115.2838],
+        "BAJA CALIFORNIA SUR": [26.0444, -111.6661],
+        "CAMPECHE": [19.8301, -90.5349],
+        "COAHUILA DE ZARAGOZA": [27.0587, -101.7068],
+        "COLIMA": [19.2452, -103.7241],
+        "CHIAPAS": [16.7569, -93.1292],
+        "CHIHUAHUA": [28.6320, -106.0691],
+        "CIUDAD DE MÉXICO": [19.4326, -99.1332],
+        "DURANGO": [24.0277, -104.6532],
+        "GUANAJUATO": [21.0190, -101.2574],
+        "GUERRERO": [17.4392, -99.5451],
+        "HIDALGO": [20.0911, -98.7624],
+        "JALISCO": [20.6597, -103.3496],
+        "MÉXICO": [19.3553, -99.6462],
+        "MICHOACÁN DE OCAMPO": [19.5665, -101.7068],
+        "MORELOS": [18.6813, -99.1013],
+        "NAYARIT": [21.7514, -104.8455],
+        "NUEVO LEÓN": [25.5922, -99.9962],
+        "OAXACA": [17.0732, -96.7266],
+        "PUEBLA": [19.0414, -98.2063],
+        "QUERÉTARO": [20.5888, -100.3899],
+        "QUINTANA ROO": [19.1817, -88.4791],
+        "SAN LUIS POTOSÍ": [22.1565, -100.9855],
+        "SINALOA": [25.1721, -107.4795],
+        "SONORA": [29.2972, -110.3309],
+        "TABASCO": [17.8409, -92.6189],
+        "TAMAULIPAS": [24.2669, -98.8363],
+        "TLAXCALA": [19.3182, -98.2375],
+        "VERACRUZ DE IGNACIO DE LA LLAVE": [19.1738, -96.1342],
+        "YUCATÁN": [20.7099, -89.0943],
+        "ZACATECAS": [22.7709, -102.5832]
+    };
+
+    // Función auxiliar para normalizar nombres y encontrar datos de la entidad
+    function normalizarTexto(texto) {
+        return (texto || '')
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toUpperCase()
+            .trim();
+    }
+
+    function encontrarEntidad(nombre) {
+        const norm = normalizarTexto(nombre);
+        // Búsqueda directa
+        let found = entidades.find(e => normalizarTexto(e.Entidad) === norm);
+        if (found) return found;
+
+        // Búsqueda por inclusión
+        found = entidades.find(e => {
+            const eNorm = normalizarTexto(e.Entidad);
+            return eNorm.includes(norm) || norm.includes(eNorm);
+        });
+        return found || null;
+    }
+
+    // Inicializar mapa Leaflet centrado en México
+    const map = L.map('mapLeaflet', { scrollWheelZoom: false }).setView([23.6345, -102.5528], 5);
+
+    // CAPAS BASE 100% GRATUITAS Y SIN REQUERIMIENTO DE API KEY (Cero marcas de agua)
+    const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+    });
+
+    const esriGrayLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 16,
+        attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
+    });
+
+    // Agregar la capa de mapa gris de Esri por defecto (armoniza con la escala de grises)
+    esriGrayLayer.addTo(map);
+
+    // Selector de capas base
+    L.control.layers({
+        "Mapa Gris (Esri Canvas)": esriGrayLayer,
+        "Mapa Detallado (OpenStreetMap)": osmLayer
+    }, null, { position: 'topright' }).addTo(map);
+
+    let capaGeoJson = null;
+    let capasMarcadores = [];
+    let geojsonData = null;
+
+    // Escalas de color según modo
+    function obtenerColor(valor, maxValor) {
+        if (!maxValor || maxValor <= 0) return '#cbd5e1';
+        const ratio = Math.max(0, Math.min(1, valor / maxValor));
+
+        if (modoActual === 'homicidios') {
+            // Escala térmica cálida: amarillo suave a carmesí profundo
+            if (ratio > 0.8) return '#7f1d1d';
+            if (ratio > 0.6) return '#b91c1c';
+            if (ratio > 0.4) return '#dc2626';
+            if (ratio > 0.2) return '#f87171';
+            if (ratio > 0.05) return '#fca5a5';
+            return '#fee2e2';
+        } else if (modoActual === 'poblacion') {
+            // Escala azul: celeste a azul marino
+            if (ratio > 0.8) return '#1e3a8a';
+            if (ratio > 0.6) return '#1d4ed8';
+            if (ratio > 0.4) return '#2563eb';
+            if (ratio > 0.2) return '#60a5fa';
+            if (ratio > 0.05) return '#93c5fd';
+            return '#dbeafe';
+        } else {
+            // Escala violeta / ámbar para Tasa por 100k
+            if (ratio > 0.8) return '#581c87';
+            if (ratio > 0.6) return '#7c3aed';
+            if (ratio > 0.4) return '#8b5cf6';
+            if (ratio > 0.2) return '#a78bfa';
+            if (ratio > 0.05) return '#c4b5fd';
+            return '#ede9fe';
+        }
+    }
+
+    function construirPopup(item) {
+        if (!item) return '<div>Sin datos</div>';
+        return `
+            <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 12px; min-width: 190px;">
+                <div style="font-weight: 700; color: #0f172a; font-size: 13px; margin-bottom: 6px; border-bottom: 2px solid #e2e8f0; padding-bottom: 4px;">
+                    ${item.Entidad}
+                </div>
+                <div style="margin: 4px 0; font-size: 12px;">
+                    <strong>Víctimas:</strong> <span style="color: #dc2626; font-weight: 700;">${item.Num_Muertos.toLocaleString()}</span>
+                </div>
+                <div style="margin: 4px 0; font-size: 12px;">
+                    <strong>Población INEGI:</strong> <span style="color: #2563eb; font-weight: 600;">${item.Poblacion.toLocaleString()} hab.</span>
+                </div>
+                <div style="margin: 4px 0; font-size: 12px;">
+                    <strong>Tasa x 100k:</strong> <span style="color: #7c3aed; font-weight: 600;">${item.TasaPor100k}</span>
+                </div>
+                <div style="margin-top: 6px; padding-top: 4px; border-top: 1px dashed #e2e8f0; color: #475569; font-size: 11px;">
+                    Hombres: ${item.Hombres} | Mujeres: ${item.Mujeres} | N/I: ${item.No_Identificado}
+                </div>
+                <div style="color: #64748b; font-size: 11px;">
+                    Aporte Nacional: ${item.PctNacional}%
+                </div>
+            </div>
+        `;
+    }
+
+    function actualizarMapa() {
+        const maxMuertos = Math.max(...entidades.map(e => e.Num_Muertos), 1);
+        const maxPoblacion = Math.max(...entidades.map(e => e.Poblacion), 1);
+        const maxTasa = Math.max(...entidades.map(e => e.TasaPor100k), 1);
+
+        const maxActual = modoActual === 'homicidios' ? maxMuertos : (modoActual === 'poblacion' ? maxPoblacion : maxTasa);
+
+        // 1. Actualizar Polígonos de Estados (Choropleth de México)
+        if (capaGeoJson && geojsonData) {
+            capaGeoJson.eachLayer(layer => {
+                const nombreFeature = layer.feature.properties.name;
+                const item = encontrarEntidad(nombreFeature);
+                const valor = item ? (modoActual === 'homicidios' ? item.Num_Muertos : (modoActual === 'poblacion' ? item.Poblacion : item.TasaPor100k)) : 0;
+                const color = obtenerColor(valor, maxActual);
+
+                layer.setStyle({
+                    fillColor: color,
+                    weight: 1.2,
+                    opacity: 1,
+                    color: '#ffffff',
+                    fillOpacity: 0.68
+                });
+
+                if (item) {
+                    layer.bindPopup(construirPopup(item));
+                    layer.bindTooltip(`<strong>${item.Entidad}</strong><br/>${modoActual === 'homicidios' ? 'Víctimas: ' + item.Num_Muertos.toLocaleString() : (modoActual === 'poblacion' ? 'Población: ' + item.Poblacion.toLocaleString() : 'Tasa: ' + item.TasaPor100k)}`, { sticky: true });
+                }
+            });
+        }
+
+        // 2. Actualizar Marcadores Cilíndricos Proporcionales
+        capasMarcadores.forEach(m => map.removeLayer(m));
+        capasMarcadores = [];
+
+        entidades.forEach(item => {
+            const coords = coordsEntidades[item.Entidad];
+            if (!coords) return;
+
+            let radio = 8;
+            let colorBorde = '#dc2626';
+            let colorRelleno = '#ef4444';
+
+            if (modoActual === 'homicidios') {
+                const ratio = item.Num_Muertos / maxMuertos;
+                radio = Math.max(6, Math.min(26, Math.sqrt(ratio) * 22 + 5));
+                colorBorde = '#991b1b';
+                colorRelleno = '#ef4444';
+            } else if (modoActual === 'poblacion') {
+                const ratio = item.Poblacion / maxPoblacion;
+                radio = Math.max(6, Math.min(26, Math.sqrt(ratio) * 22 + 5));
+                colorBorde = '#1e3a8a';
+                colorRelleno = '#3b82f6';
+            } else if (modoActual === 'tasa') {
+                const ratio = item.TasaPor100k / maxTasa;
+                radio = Math.max(6, Math.min(26, Math.sqrt(ratio) * 22 + 5));
+                colorBorde = '#581c87';
+                colorRelleno = '#8b5cf6';
+            }
+
+            const circle = L.circleMarker(coords, {
+                radius: radio,
+                color: colorBorde,
+                fillColor: colorRelleno,
+                fillOpacity: 0.85,
+                weight: 1.5
+            }).addTo(map);
+
+            circle.bindPopup(construirPopup(item));
+            capasMarcadores.push(circle);
+        });
+    }
+
+    // Cargar polígonos de estados desde mex.topo.json
+    fetch('/mex.topo.json')
+        .then(res => {
+            if (!res.ok) throw new Error('No se pudo cargar mex.topo.json');
+            return res.json();
+        })
+        .then(mexTopo => {
+            geojsonData = topojson.feature(mexTopo, mexTopo.objects.mex);
+
+            capaGeoJson = L.geoJSON(geojsonData, {
+                style: function() {
+                    return {
+                        fillColor: '#94a3b8',
+                        weight: 1.2,
+                        opacity: 1,
+                        color: '#ffffff',
+                        fillOpacity: 0.6
+                    };
+                },
+                onEachFeature: function(feature, layer) {
+                    layer.on({
+                        mouseover: function(e) {
+                            const l = e.target;
+                            l.setStyle({
+                                weight: 2.5,
+                                color: '#0f172a',
+                                fillOpacity: 0.85
+                            });
+                            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                                l.bringToFront();
+                            }
+                        },
+                        mouseout: function(e) {
+                            if (capaGeoJson) {
+                                capaGeoJson.resetStyle(e.target);
+                                actualizarMapa();
+                            }
+                        }
+                    });
+                }
+            }).addTo(map);
+
+            actualizarMapa();
+        })
+        .catch(err => {
+            console.warn('Aviso: Cargando mapa en modo marcadores vectoriales:', err);
+            actualizarMapa();
+        });
+
+    function renderizarTablaRanking() {
+        const tbody = document.getElementById('tbodyRankingEntidades');
+        const colHeader = document.getElementById('columnaMetricaHeader');
+        const colSecHeader = document.getElementById('columnaSecundariaHeader');
+        tbody.innerHTML = '';
+
+        let listaOrdenada = [...entidades];
+
+        if (modoActual === 'homicidios') {
+            listaOrdenada.sort((a, b) => b.Num_Muertos - a.Num_Muertos);
+            colHeader.innerText = 'Víctimas';
+            colSecHeader.innerText = '% Nacional';
+        } else if (modoActual === 'poblacion') {
+            listaOrdenada.sort((a, b) => b.Poblacion - a.Poblacion);
+            colHeader.innerText = 'Población';
+            colSecHeader.innerText = 'Víctimas';
+        } else if (modoActual === 'tasa') {
+            listaOrdenada.sort((a, b) => b.TasaPor100k - a.TasaPor100k);
+            colHeader.innerText = 'Tasa / 100k';
+            colSecHeader.innerText = 'Víctimas';
+        }
+
+        listaOrdenada.forEach(item => {
+            const tr = document.createElement('tr');
+            let metricaValor = '';
+            let secundariaValor = '';
+
+            if (modoActual === 'homicidios') {
+                metricaValor = `<span class="badge badge-soft-danger fw-bold">${item.Num_Muertos.toLocaleString()}</span>`;
+                secundariaValor = `<span class="small text-secondary">${item.PctNacional}%</span>`;
+            } else if (modoActual === 'poblacion') {
+                metricaValor = `<span class="badge badge-soft-primary fw-bold">${item.Poblacion.toLocaleString()}</span>`;
+                secundariaValor = `<span class="small text-danger fw-semibold">${item.Num_Muertos.toLocaleString()}</span>`;
+            } else if (modoActual === 'tasa') {
+                metricaValor = `<span class="badge badge-soft-warning fw-bold text-dark">${item.TasaPor100k}</span>`;
+                secundariaValor = `<span class="small text-danger fw-semibold">${item.Num_Muertos.toLocaleString()}</span>`;
+            }
+
+            tr.innerHTML = `
+                <td class="fw-medium text-dark small">${item.Entidad}</td>
+                <td class="text-center">${metricaValor}</td>
+                <td class="text-center">${secundariaValor}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function cambiarModo(nuevoModo) {
+        modoActual = nuevoModo;
+
+        // Actualizar estados visuales de los botones
+        document.getElementById('btnModoHomicidios').className = nuevoModo === 'homicidios' ? 'btn btn-primary active fw-medium px-3' : 'btn btn-outline-secondary fw-medium px-3';
+        document.getElementById('btnModoPoblacion').className = nuevoModo === 'poblacion' ? 'btn btn-primary active fw-medium px-3' : 'btn btn-outline-secondary fw-medium px-3';
+        document.getElementById('btnModoTasa').className = nuevoModo === 'tasa' ? 'btn btn-primary active fw-medium px-3' : 'btn btn-outline-secondary fw-medium px-3';
+
+        // Actualizar textos informativos
+        const titulo = document.getElementById('mapaTitulo');
+        const leyenda = document.getElementById('mapaLeyenda');
+        const indicador = document.getElementById('mapaIndicadorModo');
+
+        if (nuevoModo === 'homicidios') {
+            titulo.innerText = 'Mapa de Calor: Incidencia de Homicidios';
+            leyenda.className = 'badge badge-soft-danger';
+            leyenda.innerText = 'Escala por Volumen Delictivo';
+            indicador.innerText = 'Modo Homicidios Activo';
+        } else if (nuevoModo === 'poblacion') {
+            titulo.innerText = 'Mapa de Calor: Censo de Población (INEGI)';
+            leyenda.className = 'badge badge-soft-primary';
+            leyenda.innerText = 'Escala por Densidad Demográfica';
+            indicador.innerText = 'Modo Población INEGI Activo';
+        } else if (nuevoModo === 'tasa') {
+            titulo.innerText = 'Mapa de Calor: Tasa por 100k Habitantes';
+            leyenda.className = 'badge badge-soft-warning';
+            leyenda.innerText = 'Escala por Tasa Relativa';
+            indicador.innerText = 'Modo Tasa Relativa Activo';
+        }
+
+        actualizarMapa();
+        renderizarTablaRanking();
+    }
+
+    // Inicializar al cargar
+    renderizarTablaRanking();
+</script>
+}

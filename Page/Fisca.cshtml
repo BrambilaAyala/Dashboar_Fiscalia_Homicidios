@@ -1,0 +1,440 @@
+@page
+@model ProyectoFisca.Pages.FiscaModel
+@{
+    ViewData["Title"] = "Centro de Inteligencia (Fisca)";
+}
+
+<div class="mb-4">
+    <!-- Encabezado con Botones de Acción -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center pb-3 mb-3 border-bottom" style="border-color: #cbd5e1 !important;">
+        <div>
+            <h2 class="h4 fw-bold text-slate-900 mb-1">Centro de Inteligencia y Registros Forenses</h2>
+            <p class="text-secondary small mb-0">Consolidado de homicidios dolosos por municipio y entidad federativa con fuentes de verificación oficial (2023 - 2026).</p>
+        </div>
+        <div class="d-flex gap-2 mt-2 mt-sm-0">
+            <button class="btn btn-primary btn-sm px-3 fw-medium" data-bs-toggle="modal" data-bs-target="#modalEtl">
+                📥 Ingesta Oficial CNS (2023-2026)
+            </button>
+            <button id="btnExportCsv" class="btn btn-outline-secondary btn-sm px-3 fw-medium">
+                📊 Exportar CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Alertas Informativas de Procesamiento ETL -->
+    @if (!string.IsNullOrEmpty(Model.MensajeEtl))
+    {
+        <div class="alert alert-@Model.TipoMensajeEtl alert-dismissible fade show small py-2 px-3 mb-3" role="alert">
+            <strong>Resultado ETL:</strong> @Model.MensajeEtl
+            <button type="button" class="btn-close btn-sm py-2" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Tarjetas de Métricas (KPIs) con Barras de Progreso Visuales -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card border-top border-3 border-danger">
+                <div class="stat-label">Total Víctimas en Filtro</div>
+                <div class="stat-value text-danger">@Model.TotalMuertos.ToString("N0")</div>
+                <div class="stat-help">En @Model.TotalRegistros registros seleccionados</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card border-top border-3 border-primary">
+                <div class="stat-label">Víctimas Hombres</div>
+                <div class="stat-value text-primary">@Model.TotalHombres.ToString("N0")</div>
+                <div class="d-flex align-items-center">
+                    <div class="progress flex-grow-1 me-2" style="height: 5px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: @Model.PorcentajeHombres%"></div>
+                    </div>
+                    <span class="small fw-semibold text-primary">@Model.PorcentajeHombres%</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card border-top border-3 border-warning">
+                <div class="stat-label">Víctimas Mujeres</div>
+                <div class="stat-value text-warning">@Model.TotalMujeres.ToString("N0")</div>
+                <div class="d-flex align-items-center">
+                    <div class="progress flex-grow-1 me-2" style="height: 5px;">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: @Model.PorcentajeMujeres%"></div>
+                    </div>
+                    <span class="small fw-semibold text-warning">@Model.PorcentajeMujeres%</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card border-top border-3 border-secondary">
+                <div class="stat-label">No Identificados</div>
+                <div class="stat-value text-secondary">@Model.TotalNoIdentificado.ToString("N0")</div>
+                <div class="d-flex align-items-center">
+                    <div class="progress flex-grow-1 me-2" style="height: 5px;">
+                        <div class="progress-bar bg-secondary" role="progressbar" style="width: @Model.PorcentajeNoIdentificado%"></div>
+                    </div>
+                    <span class="small fw-semibold text-secondary">@Model.PorcentajeNoIdentificado%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN VISUAL ATRACTIVA: GRÁFICAS DE RESUMEN EN FISCA (Feedback de Usuarios) -->
+    <div class="row g-4 mb-4">
+        <!-- Gráfica 1: Municipios con Mayor Incidencia -->
+        <div class="col-lg-8">
+            <div class="card card-clean h-100 overflow-hidden">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center border-bottom" style="background-color: #f1f5f9; border-color: #cbd5e1 !important;">
+                    <div>
+                        <h6 class="fw-bold mb-0 text-slate-800">Focos de Mayor Incidencia Municipal</h6>
+                        <span class="small text-muted">Municipios críticos con mayor concentración delictiva</span>
+                    </div>
+                    <span class="badge badge-soft-danger">Top Críticos</span>
+                </div>
+                <div class="card-body p-3">
+                    <div style="position: relative; height: 260px; width: 100%;">
+                        <canvas id="chartFiscaMunicipios"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfica 2: Proporción de Género en Filtro -->
+        <div class="col-lg-4">
+            <div class="card card-clean h-100 overflow-hidden">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center border-bottom" style="background-color: #f1f5f9; border-color: #cbd5e1 !important;">
+                    <h6 class="fw-bold mb-0 text-slate-800">Distribución por Género</h6>
+                    <span class="badge badge-soft-primary">Proporciones</span>
+                </div>
+                <div class="card-body p-3 d-flex flex-column align-items-center justify-content-center">
+                    <div style="position: relative; height: 180px; width: 180px;">
+                        <canvas id="chartFiscaGenero"></canvas>
+                    </div>
+                    <div class="d-flex justify-content-around w-100 mt-3 pt-3 border-top text-center" style="border-color: #e2e8f0 !important;">
+                        <div>
+                            <span class="badge badge-soft-primary">Hombres</span>
+                            <div class="fw-bold small mt-1 text-primary">@Model.PorcentajeHombres%</div>
+                        </div>
+                        <div>
+                            <span class="badge badge-soft-warning">Mujeres</span>
+                            <div class="fw-bold small mt-1 text-warning">@Model.PorcentajeMujeres%</div>
+                        </div>
+                        <div>
+                            <span class="badge badge-soft-secondary">N/I</span>
+                            <div class="fw-bold small mt-1 text-secondary">@Model.PorcentajeNoIdentificado%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de Filtros Multidimensional con Filtrado Automático -->
+    <div class="card card-clean p-3 mb-4">
+        <form id="formFiltrosFisca" method="get" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <input type="text" id="inputBuscarFisca" class="form-control form-control-sm" name="Buscar" value="@Model.Buscar" placeholder="🔍 Buscar por municipio, estado, fuente o fecha..." autocomplete="off" />
+            </div>
+            <div class="col-md-3">
+                <select class="form-select form-select-sm" name="EntidadFiltro" onchange="this.form.submit()">
+                    <option value="TODAS">🏛️ Todas las Entidades (@Model.EntidadesDisponibles.Count)</option>
+                    @foreach (var ent in Model.EntidadesDisponibles)
+                    {
+                        if (Model.EntidadFiltro == ent)
+                        {
+                            <option value="@ent" selected>@ent</option>
+                        }
+                        else
+                        {
+                            <option value="@ent">@ent</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select form-select-sm" name="AnioFiltro" onchange="this.form.submit()">
+                    <option value="TODOS" selected="@(Model.AnioFiltro == "TODOS")">📅 Todos los Años</option>
+                    <option value="2026" selected="@(Model.AnioFiltro == "2026")">Año 2026</option>
+                    <option value="2025" selected="@(Model.AnioFiltro == "2025")">Año 2025</option>
+                    <option value="2024" selected="@(Model.AnioFiltro == "2024")">Año 2024</option>
+                    <option value="2023" selected="@(Model.AnioFiltro == "2023")">Año 2023</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100 fw-medium">Filtrar</button>
+                <a href="/Fisca" class="btn btn-outline-secondary btn-sm fw-medium">Limpiar</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabla Principal de Registros Forenses -->
+    <div class="card card-clean overflow-hidden mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center border-bottom" style="background-color: #f1f5f9; border-color: #cbd5e1 !important;">
+            <h6 class="fw-bold mb-0 text-slate-800">Registros Forenses Detallados</h6>
+            <span class="badge badge-soft-secondary">Página @Model.Pagina de @(Model.TotalPaginas > 0 ? Model.TotalPaginas : 1)</span>
+        </div>
+        <div class="table-responsive">
+            <table id="tablaFisca" class="table table-clean table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Fecha</th>
+                        <th>Entidad</th>
+                        <th>Municipio</th>
+                        <th class="text-center">Víctimas</th>
+                        <th class="text-center">Hombres</th>
+                        <th class="text-center">Mujeres</th>
+                        <th class="text-center">N/I</th>
+                        <th>Fuente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.RegistrosPaginados.Any())
+                    {
+                        @foreach (var r in Model.RegistrosPaginados)
+                        {
+                            <tr>
+                                <td class="text-muted small">@r.Id</td>
+                                <td class="text-nowrap small text-secondary">@r.Fecha</td>
+                                <td><span class="badge badge-soft-secondary">@r.Entidad</span></td>
+                                <td class="fw-medium text-dark">@r.Municipio</td>
+                                <td class="text-center">
+                                    <span class="badge badge-soft-danger fw-bold">@r.Num_Muertos</span>
+                                </td>
+                                <td class="text-center small text-primary">@r.Hombres</td>
+                                <td class="text-center small text-warning">@r.Mujeres</td>
+                                <td class="text-center small text-secondary">@r.No_Identificado</td>
+                                <td class="small text-muted text-truncate" style="max-width: 260px;" title="@r.Fuente">@r.Fuente</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-muted small">
+                                No se encontraron registros coincidentes con los criterios de búsqueda.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.TotalPaginas > 1)
+        {
+            <div class="card-footer py-3 d-flex justify-content-between align-items-center border-top" style="background-color: #f1f5f9; border-color: #cbd5e1 !important;">
+                <div class="small text-secondary">
+                    Mostrando @((Model.Pagina - 1) * Model.TamanoPagina + 1) - @(Math.Min(Model.Pagina * Model.TamanoPagina, Model.TotalRegistros)) de @Model.TotalRegistros registros
+                </div>
+                <nav aria-label="Navegación de páginas">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item @(Model.Pagina <= 1 ? "disabled" : "")">
+                            <a class="page-link" href="?Pagina=@(Model.Pagina - 1)&Buscar=@Model.Buscar&EntidadFiltro=@Model.EntidadFiltro&AnioFiltro=@Model.AnioFiltro">Anterior</a>
+                        </li>
+                        @for (int p = Math.Max(1, Model.Pagina - 2); p <= Math.Min(Model.TotalPaginas, Model.Pagina + 2); p++)
+                        {
+                            <li class="page-item @(p == Model.Pagina ? "active" : "")">
+                                <a class="page-link" href="?Pagina=@p&Buscar=@Model.Buscar&EntidadFiltro=@Model.EntidadFiltro&AnioFiltro=@Model.AnioFiltro">@p</a>
+                            </li>
+                        }
+                        <li class="page-item @(Model.Pagina >= Model.TotalPaginas ? "disabled" : "")">
+                            <a class="page-link" href="?Pagina=@(Model.Pagina + 1)&Buscar=@Model.Buscar&EntidadFiltro=@Model.EntidadFiltro&AnioFiltro=@Model.AnioFiltro">Siguiente</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal Extracción Automatizada con Opciones Rápidas de Muestra -->
+<div class="modal fade" id="modalEtl" tabindex="-1" aria-labelledby="modalEtlLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow">
+            <form method="post" asp-page-handler="ProcesarEtl">
+                <div class="modal-header py-3 px-4 border-bottom" style="background-color: #f1f5f9; border-color: #cbd5e1 !important;">
+                    <h5 class="modal-title fw-bold text-dark" id="modalEtlLabel">Extracción Automatizada de Boletines Oficiales (SSPC / CNS)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-secondary small mb-3">
+                        Descarga directa de los reportes diarios PDF de homicidios desde el portal oficial <code>http://www.informeseguridad.cns.gob.mx/</code>.
+                    </p>
+
+                    <!-- Botones de Muestras Rápidas -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-dark small text-uppercase">Muestras Rápidas Disponibles:</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm fw-medium" onclick="aplicarMuestra('7dias')">
+                                Descargar Muestra (7 días)
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm fw-medium" onclick="aplicarMuestra('mes')">
+                                Descargar el Mes más Reciente
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm fw-medium" onclick="aplicarMuestra('2023')">
+                                Muestra 7 días 2023
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm fw-medium" onclick="aplicarMuestra('2024')">
+                                Muestra 7 días 2024
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm fw-medium" onclick="aplicarMuestra('2025')">
+                                Muestra 7 días 2025
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm fw-medium" onclick="aplicarMuestra('2026')">
+                                Muestra 7 días 2026
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Campos de Fechas -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium small text-secondary">Fecha de Inicio:</label>
+                            <input type="date" id="inputFechaInicio" name="fechaInicio" class="form-control form-control-sm" required value="2026-03-01" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium small text-secondary">Fecha de Fin:</label>
+                            <input type="date" id="inputFechaFin" name="fechaFin" class="form-control form-control-sm" required value="2026-03-07" />
+                        </div>
+
+                    </div>
+
+                    <div class="mt-3 p-3 rounded text-muted small" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                        <span class="text-success fw-bold">✓ Manejo multiformato 2023–2026:</span> Los boletines escaneados sin texto digital son detectados y omitidos de forma segura para preservar la integridad de la base relacional.
+                    </div>
+                </div>
+                <div class="modal-footer py-3 px-4 border-top" style="background-color: #f1f5f9; border-color: #cbd5e1 !important;">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 fw-medium">Iniciar Extracción Oficial</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Inicializar Gráficas Visuales en Fisca
+    const topMunicipiosData = @Html.Raw(Model.TopMunicipiosJson);
+    const totalH = @Model.TotalHombres;
+    const totalM = @Model.TotalMujeres;
+    const totalNI = @Model.TotalNoIdentificado;
+
+    // 1. Gráfica de Municipios Críticos
+    const ctxMun = document.getElementById('chartFiscaMunicipios').getContext('2d');
+    new Chart(ctxMun, {
+        type: 'bar',
+        data: {
+            labels: topMunicipiosData.map(d => d.nombre),
+            datasets: [{
+                label: 'Víctimas',
+                data: topMunicipiosData.map(d => d.muertos),
+                backgroundColor: 'rgba(220, 38, 38, 0.75)',
+                borderColor: '#dc2626',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: { color: '#e2e8f0' },
+                    ticks: { font: { family: 'Inter', size: 10 } }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Inter', size: 10 } }
+                }
+            }
+        }
+    });
+
+    // 2. Gráfica de Dona de Género
+    const ctxGen = document.getElementById('chartFiscaGenero').getContext('2d');
+    new Chart(ctxGen, {
+        type: 'doughnut',
+        data: {
+            labels: ['Hombres', 'Mujeres', 'No Identificado'],
+            datasets: [{
+                data: [totalH, totalM, totalNI],
+                backgroundColor: ['#2563eb', '#d97706', '#94a3b8'],
+                borderWidth: 2,
+                borderColor: '#ffffff',
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            cutout: '68%'
+        }
+    });
+
+    // Manejo de Muestras Rápidas en Modal ETL
+    function aplicarMuestra(tipo) {
+        const inputInicio = document.getElementById('inputFechaInicio');
+        const inputFin = document.getElementById('inputFechaFin');
+        const hoy = new Date();
+        const formato = (d) => d.toISOString().slice(0, 10);
+
+        if (tipo === '7dias') {
+            inputInicio.value = '2024-03-01';
+            inputFin.value = '2024-03-07';
+        } else if (tipo === 'mes') {
+            inputInicio.value = '2024-03-01';
+            inputFin.value = '2024-03-31';
+        } else if (tipo === '2023') {
+            inputInicio.value = '2023-01-01';
+            inputFin.value = '2023-01-07';
+        } else if (tipo === '2024') {
+            inputInicio.value = '2024-03-01';
+            inputFin.value = '2024-03-07';
+        } else if (tipo === '2025') {
+            inputInicio.value = '2025-06-01';
+            inputFin.value = '2025-06-07';
+        } else if (tipo === '2026') {
+            inputInicio.value = '2026-09-01';
+            inputFin.value = '2026-09-07';
+        }
+    }
+
+    // Exportador a CSV
+    document.getElementById('btnExportCsv').addEventListener('click', function() {
+        const table = document.getElementById('tablaFisca');
+        let csv = [];
+        for (let row of table.rows) {
+            let rowData = [];
+            for (let cell of row.cells) {
+                let text = cell.innerText.replace(/"/g, '""').trim();
+                rowData.push('"' + text + '"');
+            }
+            csv.push(rowData.join(','));
+        }
+        const blob = new Blob(["\uFEFF" + csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "homicidios_fiscalia_" + new Date().toISOString().slice(0, 10) + ".csv";
+        link.click();
+    });
+
+    // Auto-filtrado reactivo en el buscador de texto
+    const inputBuscar = document.getElementById('inputBuscarFisca');
+    let timerBuscar;
+    if (inputBuscar) {
+        inputBuscar.addEventListener('input', function() {
+            clearTimeout(timerBuscar);
+            timerBuscar = setTimeout(() => {
+                document.getElementById('formFiltrosFisca').submit();
+            }, 600);
+        });
+    }
+</script>
+}

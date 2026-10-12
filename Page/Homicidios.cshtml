@@ -1,0 +1,51 @@
+@page
+@model ProyectoFisca.Pages.HomicidiosModel
+@{
+    ViewData["Title"] = "Consolidado de Homicidios";
+}
+
+<div class="mb-4">
+    <!-- Encabezado Limpio -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center pb-3 mb-3 border-bottom">
+        <div>
+            <h2 class="h4 fw-bold text-slate-900 mb-1">Consolidado Municipal y Estatal</h2>
+            <p class="text-secondary small mb-0">Listado estructurado de casos por entidad federativa y municipio ordenado por volumen de víctimas.</p>
+        </div>
+        <div>
+            <span class="badge badge-soft-primary px-3 py-2 small fw-semibold">Top @Model.ListaHomicidios.Count Registros</span>
+        </div>
+    </div>
+
+    <!-- Tabla Limpia -->
+    <div class="card card-clean overflow-hidden">
+        <div class="card-header py-3 border-bottom" style="background-color: #f1f5f9; border-color: #cbd5e1 !important;">
+            <h6 class="fw-bold mb-0 text-slate-800">Incidentes Forenses Consolidados</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-clean table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">#</th>
+                        <th>Entidad Federativa</th>
+                        <th>Municipio</th>
+                        <th class="text-center" style="width: 180px;">Número de Víctimas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ int i = 1; }
+                    @foreach (var h in Model.ListaHomicidios)
+                    {
+                        <tr>
+                            <td class="small text-muted">@(i++)</td>
+                            <td><span class="badge badge-soft-secondary">@h.Entidad</span></td>
+                            <td class="fw-medium text-dark">@h.Municipio</td>
+                            <td class="text-center">
+                                <span class="badge badge-soft-danger fw-bold fs-7">@h.Num_Muertos</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

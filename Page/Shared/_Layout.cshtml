@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ProyectoFisca</title>
+    <!-- Google Fonts & Bootstrap 5 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <script>
+        // Evitar parpadeo de layout aplicando estado guardado de contracción inmediatamente
+        if (localStorage.getItem('sidebar_collapsed') === 'true') {
+            document.documentElement.classList.add('sidebar-is-collapsed');
+        }
+    </script>
+
+    <style>
+        :root {
+            --sidebar-width: 250px;
+            --sidebar-collapsed-width: 72px;
+            /* Paleta en escala de gris confortable y relajada para la vista */
+            --bg-main: #eaedf2;
+            --card-bg: #ffffff;
+            --border-color: #cbd5e1;
+            --border-subtle: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            
+            /* Sidebar oscuro estilo Ant Design */
+            --sidebar-bg: #001529;
+            --sidebar-border: #002140;
+            --sidebar-text: rgba(255, 255, 255, 0.65);
+            --sidebar-text-hover: #ffffff;
+            --sidebar-active-bg: #1677ff;
+            --sidebar-footer-bg: #000c17;
+            
+            --accent-blue: #1677ff;
+            --accent-danger: #dc2626;
+            --accent-warning: #d97706;
+            --accent-success: #059669;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styling Ant Design Theme */
+        #sidebar {
+            width: var(--sidebar-width);
+            min-width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--sidebar-border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1040;
+            transition: width 0.3s cubic-bezier(0.2, 0, 0, 1), min-width 0.3s cubic-bezier(0.2, 0, 0, 1), transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar-brand {
+            padding: 20px 20px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(0, 0, 0, 0.15);
+            transition: padding 0.3s ease;
+        }
+
+        .sidebar-brand-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.2px;
+            margin: 0;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-brand-sub {
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--sidebar-text);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-top: 4px;
+        }
+
+        .sidebar-menu {
+            padding: 16px 12px;
+            flex-grow: 1;
+            overflow-y: auto;
+            transition: padding 0.3s ease;
+        }
+
+        .menu-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.45);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 0 12px 10px;
+        }
+
+        .nav-sidebar {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-sidebar .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-sidebar .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--sidebar-text);
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
+            white-space: nowrap;
+        }
+
+        .nav-sidebar .nav-link svg {
+            color: var(--sidebar-text);
+            transition: color 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .nav-sidebar .nav-link:hover {
+            color: var(--sidebar-text-hover);
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-sidebar .nav-link:hover svg {
+            color: #ffffff;
+        }
+
+        .nav-sidebar .nav-link.active {
+            color: #ffffff;
+            background-color: var(--sidebar-active-bg);
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(22, 119, 255, 0.35);
+        }
+
+        .nav-sidebar .nav-link.active svg {
+            color: #ffffff;
+        }
+
+        .sidebar-footer {
+            padding: 14px 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: var(--sidebar-footer-bg);
+            font-size: 0.75rem;
+            color: var(--sidebar-text);
+            transition: padding 0.3s ease;
+        }
+
+        .sidebar-collapse-trigger {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 0;
+            color: rgba(255, 255, 255, 0.6);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .sidebar-collapse-trigger:hover {
+            color: #ffffff;
+        }
+
+        /* REGLAS PARA SIDEBAR CONTRAÍDO / EXPANDIDO */
+        html.sidebar-is-collapsed #sidebar {
+            width: var(--sidebar-collapsed-width);
+            min-width: var(--sidebar-collapsed-width);
+        }
+
+        html.sidebar-is-collapsed .sidebar-brand {
+            padding: 18px 8px;
+            text-align: center;
+        }
+
+        html.sidebar-is-collapsed .sidebar-brand-title {
+            justify-content: center;
+        }
+
+        html.sidebar-is-collapsed .sidebar-brand-title span,
+        html.sidebar-is-collapsed .sidebar-brand-sub,
+        html.sidebar-is-collapsed .menu-label,
+        html.sidebar-is-collapsed .nav-sidebar .nav-link span,
+        html.sidebar-is-collapsed .sidebar-footer-text {
+            display: none !important;
+        }
+
+        html.sidebar-is-collapsed .sidebar-menu {
+            padding: 16px 8px;
+        }
+
+        html.sidebar-is-collapsed .nav-sidebar .nav-link {
+            justify-content: center;
+            padding: 12px 0;
+        }
+
+        html.sidebar-is-collapsed .nav-sidebar .nav-link svg {
+            margin: 0 !important;
+        }
+
+        html.sidebar-is-collapsed .sidebar-footer {
+            padding: 10px 6px;
+        }
+
+        html.sidebar-is-collapsed #icon-collapse-arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Main Content Layout con fondo gris descansado */
+        #content-wrapper {
+            margin-left: var(--sidebar-width);
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            width: calc(100% - var(--sidebar-width));
+            background-color: var(--bg-main);
+            transition: margin-left 0.3s cubic-bezier(0.2, 0, 0, 1), width 0.3s cubic-bezier(0.2, 0, 0, 1);
+        }
+
+        html.sidebar-is-collapsed #content-wrapper {
+            margin-left: var(--sidebar-collapsed-width);
+            width: calc(100% - var(--sidebar-collapsed-width));
+        }
+
+        /* Top Header en gris suave, sin brillo molesto */
+        .top-navbar {
+            background-color: #f1f5f9;
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .page-header-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .main-container {
+            padding: 24px 28px;
+            flex-grow: 1;
+        }
+
+        /* Tarjetas en escala gris suave con bordes limpios */
+        .card-clean {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .card-clean:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 18px 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .stat-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 1.65rem;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.2;
+            margin-bottom: 4px;
+        }
+
+        .stat-help {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        /* Tablas limpias con encabezados grises suaves */
+        .table-clean {
+            margin-bottom: 0;
+            font-size: 0.88rem;
+        }
+
+        .table-clean thead th {
+            background-color: #e2e8f0;
+            color: #334155;
+            font-weight: 600;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 14px;
+        }
+
+        .table-clean tbody td {
+            padding: 12px 14px;
+            color: #1e293b;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+            background-color: #ffffff;
+        }
+
+        .table-clean tbody tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        .badge-soft-primary { background-color: #dbeafe; color: #1d4ed8; }
+        .badge-soft-danger { background-color: #fee2e2; color: #b91c1c; }
+        .badge-soft-warning { background-color: #fef3c7; color: #b45309; }
+        .badge-soft-secondary { background-color: #e2e8f0; color: #475569; }
+        .badge-soft-success { background-color: #d1fae5; color: #047857; }
+
+        .footer-clean {
+            padding: 16px 28px;
+            border-top: 1px solid var(--border-color);
+            background-color: #e2e8f0;
+            font-size: 0.8rem;
+            color: #475569;
+        }
+
+        /* Responsive toggle */
+        #btn-toggle-sidebar {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 5px 9px;
+            color: #334155;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #btn-toggle-sidebar:hover {
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+
+        @@media (max-width: 991.98px) {
+            #sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-width) !important;
+                min-width: var(--sidebar-width) !important;
+            }
+            #sidebar.show {
+                transform: translateX(0);
+            }
+            #content-wrapper {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+        }
+    </style>
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <!-- Menú Lateral (Sidebar) con Soporte de Contracción y Expansión -->
+    <aside id="sidebar">
+        <div class="sidebar-brand">
+            <a href="/" class="sidebar-brand-title" title="ProyectoFisca">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1677ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                <span>ProyectoFisca</span>
+            </a>
+            <div class="sidebar-brand-sub">Sistema de Inteligencia Forense</div>
+        </div>
+
+        <div class="sidebar-menu">
+            <div class="menu-label">Navegación</div>
+            <ul class="nav-sidebar">
+                <!-- 1. Inicio -->
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Index" ? "active" : "")" href="/" title="Inicio">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                        <span>Inicio</span>
+                    </a>
+                </li>
+                <!-- 2. Fisca (Inteligencia) -->
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Fisca" ? "active" : "")" href="/Fisca" title="Fisca (Inteligencia)">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <span>Fisca (Inteligencia)</span>
+                    </a>
+                </li>
+                <!-- 3. Gráficas Analíticas -->
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Graphs" ? "active" : "")" href="/Graphs" title="Gráficas Analíticas">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
+                        <span>Gráficas Analíticas</span>
+                    </a>
+                </li>
+                <!-- 4. Auditoría y Calidad (Nueva vista solicitada) -->
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Auditoria" ? "active" : "")" href="/Auditoria" title="Auditoría Forense y Calidad">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <span>Auditoría Forense</span>
+                    </a>
+                </li>
+                <!-- 5. Mapa Geográfico -->
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Map" ? "active" : "")" href="/Map" title="Mapa Geográfico">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                        <span>Mapa Geográfico</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-footer-text">
+                <div class="fw-semibold text-light small">Servidor de Base de Datos</div>
+                <div class="d-flex align-items-center mt-1">
+                    <span class="badge rounded-pill bg-success me-1" style="width: 7px; height: 7px; padding: 0;"></span>
+                    <span>MySQL Conectada</span>
+                </div>
+            </div>
+            <!-- Disparador de Contracción / Expansión del Sidebar -->
+            <div class="sidebar-collapse-trigger mt-2" onclick="toggleSidebarCollapse()" title="Contraer / Expandir Menú">
+                <svg id="icon-collapse-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.3s ease;">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Contenedor Principal -->
+    <div id="content-wrapper">
+        <nav class="top-navbar">
+            <div class="d-flex align-items-center gap-3">
+                <button id="btn-toggle-sidebar" type="button" aria-label="Contraer o Expandir menú lateral" title="Contraer / Expandir Menú">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <h1 class="page-header-title">@ViewData["Title"]</h1>
+            </div>
+            <div class="text-secondary small fw-medium">
+                Reportes Oficiales de Seguridad Pública (2023 - 2026)
+            </div>
+        </nav>
+
+        <main class="main-container">
+            @RenderBody()
+        </main>
+
+        <footer class="footer-clean d-flex flex-wrap justify-content-between align-items-center">
+            <div>
+                Fiscalía General &copy; 2026 — Plataforma de Análisis Delictivo
+            </div>
+            <div class="small text-muted">
+                Universidad de Sonora • Licenciatura en Ciencias de la Computación
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts Esenciales -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
+    <script>
+        // Función Global de Contracción / Expansión del Sidebar
+        function toggleSidebarCollapse() {
+            const isMobile = window.innerWidth < 992;
+            const sidebar = document.getElementById('sidebar');
+            if (isMobile) {
+                sidebar.classList.toggle('show');
+            } else {
+                const html = document.documentElement;
+                const isCollapsed = html.classList.toggle('sidebar-is-collapsed');
+                localStorage.setItem('sidebar_collapsed', isCollapsed ? 'true' : 'false');
+                
+                // Disparar evento de redimensionamiento para actualizar Chart.js y Leaflet fluidamente
+                setTimeout(() => {
+                    window.dispatchEvent(new Event('resize'));
+                }, 310);
+            }
+        }
+
+        const btnToggle = document.getElementById('btn-toggle-sidebar');
+        if (btnToggle) {
+            btnToggle.addEventListener('click', toggleSidebarCollapse);
+        }
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
