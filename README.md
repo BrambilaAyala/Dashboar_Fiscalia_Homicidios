@@ -1,46 +1,161 @@
-﻿# Dashboard_Fiscalia_Homicidios
-Aplicacion web para la visualizacion de los homicidios dolosos en los entidades de Mexico, y en sus municipios, para tener un conteo y patrones de los homicidios utilizando Vs Code, react, node.js y MySql.
+# 📊 Dashboard Fiscalía - Análisis de Homicidios Dolosos en México
 
-Se hizo este sistema para **SSPC** y para el **SAT**.
+[![.NET 7](https://img.shields.io/badge/.NET-7.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-Razor%20Pages-purple?logo=dotnet)](https://learn.microsoft.com/aspnet/core/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Chart.js](https://img.shields.io/badge/Chart.js-Visualizations-FF6384?logo=chartdotjs&logoColor=white)](https://www.chartjs.org/)
 
-Es un Sistema esta orientada mas al publico, para la visualizacion de datos y recabacion de datos.
+Plataforma analítica e interactiva para la **extracción automatizada (ETL)**, **auditoría de integridad de datos** y **visualización estadística geoespacial** de los homicidios dolosos diarios reportados en los 32 estados y más de 2,400 municipios de México.
 
-Se utilizo como **Pre-Procesamiento** Python, para el manejo de datos de los documentos **PDF's**.
+Los datos se obtienen de los reportes oficiales diarios emitidos por el **Centro Nacional de Información (CNI)** de la **Secretaría de Seguridad y Protección Ciudadana (SSPC)** a través del portal [Informe de Seguridad CNS](http://www.informeseguridad.cns.gob.mx/).
 
-# Herramientas.
-- VS Code.
-- MySQL.
-- MySQL WORKbench(Opcional)
-  
-# Tecnologías.
--JavaScript
-- C#, Python, HTML, CSS.
-- React, Node.js.
-- MySQL.
+---
 
-# Requistos.
-- Windows 10 o 11.
-- Vs Code de 64 bits.
-- Instalar la extencion de python.
-- Descargar `pyrhon3.11`.
+## 🚀 Características Principales
 
-# Copiar el proyecto del repositorio.
-1. Abrir la `Terminal` o el `git bah`, en la unicacion deseada.
-2. Copiar y pegar lo siguiente: `git clone https://github.com/BrambilaAyala/Graficacion_Por_Computadoras.git`
-3. Se creará una carpeta con el nombre del repositorio:
-   - cd Graficacion_Por_Computadoras
-# Ejecutar el proyecto.
-1. Dar clic en `Run project`.
-2. Te saldran mensaje en la esquina inferior derecha, para que descargues las librerias necesarias.
-3. Descarga las librerias necesarias.
+### 1. 🔄 Pipeline ETL Robusto e Inteligente
+* **Descarga y Extracción Automatizada:** Permite seleccionar rangos de fechas personalizados para consultar y descargar concurrentemente los boletines diarios del servidor oficial.
+* **Procesamiento de PDF Vectoriales:** Extracción de tablas estructuradas mediante `PdfPig` en C# de alto rendimiento.
+* **Detección de Boletines Escaneados:** Identificación automática de PDFs en formato imagen/escaneo para evitar falsos positivos y registrar su omisión en la bitácora de auditoría.
+* **Control de Días no Publicados:** Detección de fechas no publicadas o ausentes en el servidor del CNS para garantizar la trazabilidad del histórico.
 
-# Funcionamiento de los script de Python
-1. El script de python sera el primero en ejecutarse en el sistema. Puede tardar un cierto momento.
-2. Los docuemnetos **PDF** se descargaran de manera automatica, para su analisis.
-3.  El script de Python, filtra los **PDF's** que son **Textos** o **Imagenes** y los descarta.
-4.  Convierte los documentos **PDF** a documentos **CSV**
-5.  Cuando se convierten el archivos **CSV** se leen los datos y se **Insetan** en la base de datos.
+### 2. 🗺️ Normalización Geográfica y Calidad de Datos
+* **Cotejo con Catálogo INEGI:** Cruce automático contra el catálogo oficial de Entidades Federativas y 2,475 Municipios de México.
+* **Resolución de Inconsistencias y Alias:** Motor de normalización que corrige variaciones ortográficas, acentos y nombres imprecisos (p. ej. *CDMX / DF*, *Veracruz de Ignacio de la Llave / Veracruz*, *Michoacán de Ocampo*).
+* **Módulo de Auditoría en Tiempo Real (`/Auditoria`):** Dashboard dedicado a la calidad del dato con métricas dinámicas de:
+  * Total de boletines analizados vs omitidos por imagen escaneada.
+  * Días no publicados en el portal oficial.
+  * Entidades con mayor incidencia de nombres imprecisos o alias corregidos.
 
-# Informacion
-1. Los datos Utilizados se sacaron de esta pagina web [Homicidios Dolosos](http://www.informeseguridad.cns.gob.mx/)
-2. Los datos son abierto a todo publico.
+### 3. 📈 Visualización y Análisis Interactivo
+* **Filtros Reactivos Instantáneos (`/Fisca`):** Filtrado automático en vivo por entidad federativa y rango de fechas sin recargas manuales.
+* **Módulo de Gráficos Dual (`/Graphs`):** Alternancia independiente entre gráficos de barras y líneas para comparativas históricas mensuales y anuales.
+* **Mapa Geoespacial Interactivo (`/Map`):** Cartografía interactiva de la República Mexicana basada en TopoJSON y Leaflet para visualización territorial de incidencia.
+* **Interfaz Ergonómica:** Barra de navegación lateral colapsable y expandible con diseño responsivo.
+
+---
+
+## 🛠️ Tecnologías Utilizadas
+
+| Componente | Tecnología | Descripción |
+| :--- | :--- | :--- |
+| **Backend** | .NET 7.0 / C# | ASP.NET Core Razor Pages, Controllers y Servicios de Inyección de Dependencias |
+| **Parsing PDF** | UglyToad.PdfPig | Extracción de contenido vectorial estructurado desde documentos PDF |
+| **Base de Datos** | MySQL 8.0+ / MariaDB | Motor relacional indexado para almacenamiento y agregaciones de homicidios |
+| **Frontend** | Razor Pages & React 18 | Vistas dinámicas, componentes interactivos y diseño con Bootstrap 5 |
+| **Gráficos** | Chart.js | Visualizaciones estadísticas en barras, líneas y distribuciones |
+| **Mapas** | Leaflet & TopoJSON | Visualización cartográfica de entidades y municipios de México |
+
+---
+
+## 📁 Estructura del Proyecto
+
+```text
+Dashboar_Fiscalia_Homicidios/
+├── Controllers/            # Controladores API REST (EtlController, HomicidiosController, etc.)
+├── Data/                   # Contexto de Base de Datos EF Core
+├── DataAccess/             # Consultas SQL optimizadas y Factory de conexiones
+├── Database/               # Scripts de instalación SQL y catálogos INEGI
+│   ├── 01_crear_tablas.sql
+│   ├── 02_poblar_catalogos_mexico.sql
+│   └── instalador_completo_fiscalia.sql   <- Script de instalación rápida
+├── DataPdf/                # Directorio local para almacenamiento y caché de boletines PDF
+├── Models/                 # Modelos de datos y DTOs (Auditoria, Homicidios, Catálogos)
+├── Page/                   # Páginas Razor (Index, Fisca, Auditoria, Graphs, Map)
+├── Properties/             # Configuraciones de ejecución (launchSettings.json, perfiles de publicación)
+├── Scripts/                # Utilidades de preprocesamiento complementarias
+├── Sources/
+│   ├── Interface/          # Contratos de servicios (IEtlOrchestrator, INormalizadorGeo, etc.)
+│   └── Services/           # Lógica de negocio (PdfPipelineService, AuditoriaService, NormalizadorGeo)
+├── wwwroot/                # Archivos estáticos (JavaScript, CSS, imágenes y mapas)
+├── appsettings.json        # Cadena de conexión y configuración del entorno
+└── ProyectoFisca.csproj    # Archivo de configuración del proyecto .NET
+```
+
+---
+
+## ⚙️ Requisitos Previos
+
+Antes de ejecutar el proyecto, asegúrate de tener instalado en tu equipo:
+
+1. **[.NET 7.0 SDK](https://dotnet.microsoft.com/download/dotnet/7.0)** o superior.
+2. **[MySQL Server 8.0+](https://dev.mysql.com/downloads/mysql/)** o MariaDB en ejecución (puerto por defecto: `3306`).
+3. **IDE Recomendado:** [Visual Studio 2022](https://visualstudio.microsoft.com/) (con la carga de trabajo *Desarrollo web y de ASP.NET*) o [Visual Studio Code](https://code.visualstudio.com/) con la extensión *C# Dev Kit*.
+4. **Git** para el control de versiones.
+
+---
+
+## 📦 Instalación y Puesta en Marcha
+
+### 1. Clonar el repositorio
+```powershell
+git clone https://github.com/BrambilaAyala/Dashboar_Fiscalia_Homicidios.git
+cd Dashboar_Fiscalia_Homicidios
+```
+
+### 2. Configurar la Base de Datos MySQL
+1. Abre tu gestor preferido (MySQL Workbench, DBeaver o la consola de MySQL).
+2. Ejecuta el script unificado de instalación que crea la base de datos `fiscalia` y carga los catálogos del INEGI:
+   ```powershell
+   mysql -u root -p < Database/instalador_completo_fiscalia.sql
+   ```
+
+### 3. Configurar la cadena de conexión
+Revisa el archivo `appsettings.json` en la raíz del proyecto y ajusta tus credenciales de MySQL si es necesario:
+
+```json
+{
+  "ConnectionStrings": {
+    "FiscaliaConnection": "Server=localhost;Port=3306;Database=fiscalia;User=root;Password=TU_PASSWORD;"
+  }
+}
+```
+
+### 4. Compilar y ejecutar la aplicación
+
+Desde la terminal en la raíz del proyecto:
+
+```powershell
+# Restaurar paquetes NuGet
+dotnet restore
+
+# Compilar y correr el servidor
+dotnet run
+```
+
+O presiona <kbd>F5</kbd> directamente desde **Visual Studio 2022**.
+
+Abre tu navegador web en:
+👉 **`https://localhost:7198`** o **`http://localhost:5000`**
+
+---
+
+## 🖥️ Módulos de la Aplicación
+
+| Módulo | Ruta | Funcionalidad |
+| :--- | :--- | :--- |
+| **Inicio** | `/Index` | Resumen general del sistema y accesos directos principales. |
+| **Ingesta ETL** | `/Fisca` | Selección de rangos de fechas, descarga y extracción de boletines, y filtros interactivos por entidad. |
+| **Auditoría** | `/Auditoria` | Indicadores de calidad: boletines escaneados omitidos, días no publicados y correcciones de alias. |
+| **Estadísticas** | `/Graphs` | Gráficas interactivas con alternancia entre barras y líneas por estado y períodos. |
+| **Mapa** | `/Map` | Representación cartográfica territorial de la incidencia delictiva. |
+
+---
+
+## 🚢 Publicación para Producción
+
+Para generar el paquete listo para desplegar en un servidor (IIS, Kestrel o Linux):
+
+```powershell
+dotnet publish -c Release -o ./publish
+```
+
+*Los archivos empaquetados se generarán dentro de la carpeta `./publish/` con su correspondiente `web.config` y dependencias listas.*
+
+---
+
+## 📄 Licencia y Fuentes de Información
+
+* **Datos oficiales:** [Secretaría de Seguridad y Protección Ciudadana - CNI](http://www.informeseguridad.cns.gob.mx/)
+* Los datos estadísticos procesados por esta plataforma son de carácter público de acuerdo con las disposiciones de transparencia gubernamental.
