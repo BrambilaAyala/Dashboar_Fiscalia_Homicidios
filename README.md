@@ -1,4 +1,4 @@
-# 📊 Dashboard Fiscalía - Análisis de Homicidios Dolosos en México
+# Dashboard Fiscalía - Análisis de Homicidios Dolosos en México
 
 [![.NET 7](https://img.shields.io/badge/.NET-7.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-Razor%20Pages-purple?logo=dotnet)](https://learn.microsoft.com/aspnet/core/)
@@ -12,15 +12,15 @@ Los datos se obtienen de los reportes oficiales diarios emitidos por el **Centro
 
 ---
 
-## 🚀 Características Principales
+## Características Principales
 
-### 1. 🔄 Pipeline ETL Robusto e Inteligente
+### 1. Pipeline ETL Robusto e Inteligente
 * **Descarga y Extracción Automatizada:** Permite seleccionar rangos de fechas personalizados para consultar y descargar concurrentemente los boletines diarios del servidor oficial.
 * **Procesamiento de PDF Vectoriales:** Extracción de tablas estructuradas mediante `PdfPig` en C# de alto rendimiento.
 * **Detección de Boletines Escaneados:** Identificación automática de PDFs en formato imagen/escaneo para evitar falsos positivos y registrar su omisión en la bitácora de auditoría.
 * **Control de Días no Publicados:** Detección de fechas no publicadas o ausentes en el servidor del CNS para garantizar la trazabilidad del histórico.
 
-### 2. 🗺️ Normalización Geográfica y Calidad de Datos
+### 2. Normalización Geográfica y Calidad de Datos
 * **Cotejo con Catálogo INEGI:** Cruce automático contra el catálogo oficial de Entidades Federativas y 2,475 Municipios de México.
 * **Resolución de Inconsistencias y Alias:** Motor de normalización que corrige variaciones ortográficas, acentos y nombres imprecisos (p. ej. *CDMX / DF*, *Veracruz de Ignacio de la Llave / Veracruz*, *Michoacán de Ocampo*).
 * **Módulo de Auditoría en Tiempo Real (`/Auditoria`):** Dashboard dedicado a la calidad del dato con métricas dinámicas de:
@@ -28,7 +28,7 @@ Los datos se obtienen de los reportes oficiales diarios emitidos por el **Centro
   * Días no publicados en el portal oficial.
   * Entidades con mayor incidencia de nombres imprecisos o alias corregidos.
 
-### 3. 📈 Visualización y Análisis Interactivo
+### 3. Visualización y Análisis Interactivo
 * **Filtros Reactivos Instantáneos (`/Fisca`):** Filtrado automático en vivo por entidad federativa y rango de fechas sin recargas manuales.
 * **Módulo de Gráficos Dual (`/Graphs`):** Alternancia independiente entre gráficos de barras y líneas para comparativas históricas mensuales y anuales.
 * **Mapa Geoespacial Interactivo (`/Map`):** Cartografía interactiva de la República Mexicana basada en TopoJSON y Leaflet para visualización territorial de incidencia.
@@ -49,7 +49,7 @@ Los datos se obtienen de los reportes oficiales diarios emitidos por el **Centro
 
 ---
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```text
 Dashboar_Fiscalia_Homicidios/
@@ -75,7 +75,7 @@ Dashboar_Fiscalia_Homicidios/
 
 ---
 
-## ⚙️ Requisitos Previos
+## Requisitos Previos
 
 Antes de ejecutar el proyecto, asegúrate de tener instalado en tu equipo:
 
@@ -86,7 +86,7 @@ Antes de ejecutar el proyecto, asegúrate de tener instalado en tu equipo:
 
 ---
 
-## 📦 Instalación y Puesta en Marcha
+## Instalación y Puesta en Marcha
 
 ### 1. Clonar el repositorio
 ```powershell
@@ -127,11 +127,11 @@ dotnet run
 O presiona <kbd>F5</kbd> directamente desde **Visual Studio 2022**.
 
 Abre tu navegador web en:
-👉 **`https://localhost:7198`** o **`http://localhost:5000`**
+**`https://localhost:7198`** o **`http://localhost:5000`**
 
 ---
 
-## 🖥️ Módulos de la Aplicación
+## Módulos de la Aplicación
 
 | Módulo | Ruta | Funcionalidad |
 | :--- | :--- | :--- |
@@ -143,7 +143,7 @@ Abre tu navegador web en:
 
 ---
 
-## 🚢 Publicación para Producción
+## Publicación para Producción
 
 Para generar el paquete listo para desplegar en un servidor (IIS, Kestrel o Linux):
 
@@ -155,7 +155,7 @@ dotnet publish -c Release -o ./publish
 
 ---
 
-## 📄 Licencia y Fuentes de Información
+## Licencia y Fuentes de Información
 
 * **Datos oficiales:** [Secretaría de Seguridad y Protección Ciudadana - CNI](http://www.informeseguridad.cns.gob.mx/)
 * Los datos estadísticos procesados por esta plataforma son de carácter público de acuerdo con las disposiciones de transparencia gubernamental.
