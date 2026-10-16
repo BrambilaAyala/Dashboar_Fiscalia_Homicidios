@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using ProyectoFisca.Models;
@@ -64,21 +60,16 @@ namespace ProyectoFisca.Pages
                     i.Fecha.ToString("yyyy-MM-dd").Contains(b));
             }
 
-            if (!string.IsNullOrWhiteSpace(FiltroMotivo) && FiltroMotivo != "TODOS")
-            {
+            if (!string.IsNullOrWhiteSpace(FiltroMotivo) && FiltroMotivo != "TODOS") 
                 query = query.Where(i => (i.MotivoInconsistencia ?? "").Contains(FiltroMotivo, StringComparison.OrdinalIgnoreCase));
-            }
-
+            
             var filtrada = query.ToList();
             TotalRegistrosFiltrados = filtrada.Count;
             TotalPaginas = (int)Math.Ceiling((double)TotalRegistrosFiltrados / TamanoPagina);
             if (Pagina < 1) Pagina = 1;
             if (TotalPaginas > 0 && Pagina > TotalPaginas) Pagina = TotalPaginas;
 
-            RegistrosPaginados = filtrada
-                .Skip((Pagina - 1) * TamanoPagina)
-                .Take(TamanoPagina)
-                .ToList();
+            RegistrosPaginados = filtrada.Skip((Pagina - 1) * TamanoPagina).Take(TamanoPagina).ToList();
         }
     }
 }

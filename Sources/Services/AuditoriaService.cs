@@ -18,8 +18,8 @@ namespace ProyectoFisca.Sources.Services
 
         // Cache dinámico de archivos indexados por ruta y fecha de modificación
         private static readonly ConcurrentDictionary<string, (DateTime Modificado, long Longitud, bool EsImagen, DateTime? Fecha)> _cacheArchivos = new();
-        private static bool _sincronizacionInicialCompletada = false;
-        private static readonly object _syncLock = new();
+        //private static bool _sincronizacionInicialCompletada = false;
+        //private static readonly object _syncLock = new();
 
         public AuditoriaService(IDbConnectionFactory connectionFactory, IWebHostEnvironment env, ILogger<AuditoriaService> logger)
         {
@@ -67,10 +67,8 @@ namespace ProyectoFisca.Sources.Services
                         if (!readerKnown.IsDBNull(0))
                         {
                             string fname = readerKnown.GetString(0).Trim();
-                            if (!string.IsNullOrWhiteSpace(fname))
-                            {
+                            if (!string.IsNullOrWhiteSpace(fname)) 
                                 archivosImagenEnDb.Add(fname);
-                            }
                         }
                     }
                 }
@@ -78,8 +76,7 @@ namespace ProyectoFisca.Sources.Services
                 // 2. Auditoría física y dinámica de archivos reales en DataPdf
                 string carpetaPdf = Path.Combine(_env.ContentRootPath, "DataPdf");
                 string[] archivos = Directory.Exists(carpetaPdf)
-                    ? Directory.GetFiles(carpetaPdf, "*.pdf")
-                    : Array.Empty<string>();
+                    ? Directory.GetFiles(carpetaPdf, "*.pdf") : Array.Empty<string>();
 
                 dto.TotalArchivosAnalizados = archivos.Length;
 
@@ -100,17 +97,14 @@ namespace ProyectoFisca.Sources.Services
                         continue;
                     }
 
-                    if (!_cacheArchivos.TryGetValue(archivo, out var cached) ||
-                        cached.Modificado != fi.LastWriteTimeUtc ||
+                    if (!_cacheArchivos.TryGetValue(archivo, out var cached) || cached.Modificado != fi.LastWriteTimeUtc || 
                         cached.Longitud != fi.Length)
                     {
                         bool esImagen = false;
                         DateTime? fechaDoc = ParsearFechaDeNombre(archivo);
 
-                        if (fi.Length < 1000)
-                        {
+                        if (fi.Length < 1000) 
                             esImagen = true;
-                        }
                         else
                         {
                             try
@@ -122,39 +116,28 @@ namespace ProyectoFisca.Sources.Services
                                     // Instancia fresca obligatoria por cada página para evitar acumulación de texto de otros PDFs
                                     var pageStrat = new LocationTextExtractionStrategy();
                                     string p1 = PdfTextExtractor.GetTextFromPage(pdfDoc.GetPage(1), pageStrat) ?? string.Empty;
-                                    if (p1.Trim().Length < 50)
-                                    {
+                                    if (p1.Trim().Length < 50) 
                                         esImagen = true;
-                                    }
                                 }
-                                else
-                                {
+                                else 
                                     esImagen = true;
-                                }
                             }
                             catch
                             {
                                 esImagen = true;
                             }
                         }
-
                         cached = (fi.LastWriteTimeUtc, fi.Length, esImagen, fechaDoc);
                         _cacheArchivos[archivo] = cached;
 
-                        if (esImagen && fechaDoc.HasValue)
-                        {
+                        if (esImagen && fechaDoc.HasValue) 
                             nuevosOmitidosDetectados.Add((archivo, fechaDoc.Value));
-                        }
                     }
 
-                    if (cached.EsImagen)
-                    {
+                    if (cached.EsImagen) 
                         omitidosImagen++;
-                    }
-                    else
-                    {
+                    else 
                         validosTexto++;
-                    }
                 }
 
                 // Sincronizar nuevos archivos escaneados encontrados físicamente en la BD
@@ -180,10 +163,9 @@ namespace ProyectoFisca.Sources.Services
 
                 // Total de archivos omitidos por imagen escaneada (mínimo los registrados en BD o detectados físicamente)
                 dto.TotalArchivosOmitidosImagen = Math.Max(omitidosImagen, archivosImagenEnDb.Count);
-                if (dto.TotalArchivosAnalizados < dto.TotalArchivosOmitidosImagen)
-                {
+                if (dto.TotalArchivosAnalizados < dto.TotalArchivosOmitidosImagen) 
                     dto.TotalArchivosAnalizados = dto.TotalArchivosOmitidosImagen + validosTexto;
-                }
+                
                 dto.TotalArchivosValidosTexto = Math.Max(0, dto.TotalArchivosAnalizados - dto.TotalArchivosOmitidosImagen);
                 // Total de archivos no disponibles / no publicados registrados en BD
                 using (var cmdNoPub = new MySqlCommand("SELECT COUNT(*) FROM reportesinconsistencias WHERE motivo_inconsistencia LIKE '%no publicado%' OR motivo_inconsistencia LIKE '%no disponible%';", conn))
@@ -193,8 +175,7 @@ namespace ProyectoFisca.Sources.Services
                 }
 
                 dto.PorcentajeArchivosValidos = dto.TotalArchivosAnalizados > 0
-                    ? Math.Round((double)dto.TotalArchivosValidosTexto / dto.TotalArchivosAnalizados * 100, 1)
-                    : 0;
+                    ? Math.Round((double)dto.TotalArchivosValidosTexto / dto.TotalArchivosAnalizados * 100, 1) : 0;
 
                 // Sincronizar correcciones de Homicidios si faltaban
                 await SincronizarInconsistenciasReales(conn, nuevosOmitidosDetectados);
@@ -260,8 +241,7 @@ namespace ProyectoFisca.Sources.Services
                         Valor = g.Count(),
                         Color = ObtenerColorMotivo(g.Key)
                     })
-                    .OrderByDescending(x => x.Valor)
-                    .ToList();
+                    .OrderByDescending(x => x.Valor).ToList();
 
                 // C) Desglose por entidad detectada con anomalías o correcciones
                 dto.InconsistenciasPorEntidad = dto.InconsistenciasDetalle
@@ -275,9 +255,7 @@ namespace ProyectoFisca.Sources.Services
                         Valor = g.Count(),
                         Color = "#dc2626"
                     })
-                    .OrderByDescending(x => x.Valor)
-                    .Take(10)
-                    .ToList();
+                    .OrderByDescending(x => x.Valor).Take(10).ToList();
 
                 if (dto.InconsistenciasPorEntidad.Count == 0)
                 {
@@ -312,8 +290,7 @@ namespace ProyectoFisca.Sources.Services
                         Valor = g.Count(),
                         Color = "#2563eb"
                     })
-                    .OrderBy(x => x.Etiqueta)
-                    .ToList();
+                    .OrderBy(x => x.Etiqueta).ToList();
 
                 return dto;
             }
@@ -331,10 +308,8 @@ namespace ProyectoFisca.Sources.Services
             if (m.Success)
             {
                 string s = $"{m.Groups[1].Value}/{m.Groups[2].Value}/{m.Groups[3].Value}";
-                if (DateTime.TryParseExact(s, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d))
-                {
+                if (DateTime.TryParseExact(s, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d)) 
                     return d;
-                }
             }
             return null;
         }

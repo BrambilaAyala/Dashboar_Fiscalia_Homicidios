@@ -126,15 +126,11 @@ namespace ProyectoFisca.Sources.Services
                     textoUpper.Contains("SEPTIEMBRE") || textoUpper.Contains("OCTUBRE") || 
                     textoUpper.Contains("NOVIEMBRE") || textoUpper.Contains("DICIEMBRE")));
 
-                if (esBoletinOficialCns)
-                {
+                if (esBoletinOficialCns) 
                     registros = ExtraerBoletinOficialCns(textoPagina1, fecha);
-                }
-                else
-                {
+                else 
                     registros = ExtraerReporteMunicipal(pdfDoc, totalPaginas, fecha);
-                }
-
+                
                 _logger.LogInformation("Extracción finalizada para {Pdf}. Total registros válidos: {Count}", Path.GetFileName(pdfPath), registros.Count);
             }
             catch (Exception ex)
@@ -215,10 +211,8 @@ namespace ProyectoFisca.Sources.Services
                             var (entidadRes, _, _, detalle) = _normalizador.Resolver(cand, string.Empty, string.Empty);
                             if (entidadRes != "NO IDENTIFICADA" && !string.IsNullOrWhiteSpace(entidadRes))
                             {
-                                if (entidadesProcesadas.Add(entidadRes) && count > 0)
-                                {
+                                if (entidadesProcesadas.Add(entidadRes) && count > 0) 
                                     AgregarRegistrosDistribuidos(registros, fecha, entidadRes, count, cand, detalle);
-                                }
                             }
                         }
                     }
@@ -237,10 +231,8 @@ namespace ProyectoFisca.Sources.Services
                             var (entidadRes, _, _, detalle) = _normalizador.Resolver(cand, string.Empty, string.Empty);
                             if (entidadRes != "NO IDENTIFICADA" && !string.IsNullOrWhiteSpace(entidadRes))
                             {
-                                if (entidadesProcesadas.Add(entidadRes))
-                                {
+                                if (entidadesProcesadas.Add(entidadRes)) 
                                     AgregarRegistrosDistribuidos(registros, fecha, entidadRes, count, cand, detalle);
-                                }
                             }
                         }
                     }
@@ -270,15 +262,12 @@ namespace ProyectoFisca.Sources.Services
                         var (entidadRes, _, _, _) = _normalizador.Resolver(cand, string.Empty, string.Empty);
                         if (entidadRes != "NO IDENTIFICADA" && !string.IsNullOrWhiteSpace(entidadRes))
                         {
-                            if (entidadesProcesadas.Add(entidadRes))
-                            {
+                            if (entidadesProcesadas.Add(entidadRes)) 
                                 AgregarRegistrosDistribuidos(registros, fecha, entidadRes, count);
-                            }
                         }
                     }
                 }
             }
-
             return registros;
         }
 
@@ -306,13 +295,10 @@ namespace ProyectoFisca.Sources.Services
                     if (EsEncabezadoDeEntidad(lineaLimpia)) continue;
 
                     var registro = ParsearLinea(lineaLimpia, fecha);
-                    if (registro != null)
-                    {
+                    if (registro != null) 
                         registros.Add(registro);
-                    }
                 }
             }
-
             return registros;
         }
 
@@ -362,10 +348,8 @@ namespace ProyectoFisca.Sources.Services
             if (count <= 0) return;
 
             string[]? munis;
-            if (!MunicipiosPrioritariosPorEntidad.TryGetValue(entidad, out munis) || munis == null || munis.Length == 0)
-            {
+            if (!MunicipiosPrioritariosPorEntidad.TryGetValue(entidad, out munis) || munis == null || munis.Length == 0) 
                 munis = new[] { entidad };
-            }
 
             int seed = Math.Abs(fecha.DayOfYear * 31 + entidad.GetHashCode());
             bool tuvoCorreccion = !string.IsNullOrWhiteSpace(entidadRaw) && !string.Equals(entidadRaw.Trim(), entidad.Trim(), StringComparison.OrdinalIgnoreCase);
@@ -440,10 +424,8 @@ namespace ProyectoFisca.Sources.Services
                 for (int g = 0; g < numGrupos; g++)
                 {
                     int sliceCount;
-                    if (g == numGrupos - 1)
-                    {
+                    if (g == numGrupos - 1) 
                         sliceCount = remMuertos;
-                    }
                     else
                     {
                         sliceCount = (g == 0) ? (int)Math.Ceiling(count * 0.55) : (remMuertos / (numGrupos - g));
@@ -466,11 +448,9 @@ namespace ProyectoFisca.Sources.Services
                         mujeres = 1;
                         noId = ((seed + g) % 5 == 0) ? 1 : 0;
                     }
-                    else if (sliceCount >= 2 && ((seed + g) % 3 == 0))
-                    {
+                    else if (sliceCount >= 2 && ((seed + g) % 3 == 0)) 
                         mujeres = 1;
-                    }
-
+                    
                     if (mujeres + noId >= sliceCount)
                     {
                         mujeres = Math.Min(1, sliceCount - 1);
@@ -553,7 +533,6 @@ namespace ProyectoFisca.Sources.Services
                     }
                 }
             }
-
             return found;
         }
 
@@ -590,7 +569,6 @@ namespace ProyectoFisca.Sources.Services
             {
                 return true;
             }
-
             return false;
         }
 
@@ -672,18 +650,15 @@ namespace ProyectoFisca.Sources.Services
                 fuenteRaw = linea.Substring(match1Numero.Index + match1Numero.Length).Trim();
                 (entidadRaw, municipioRaw) = SepararEntidadYMunicipio(parteGeo);
             }
-            else
-            {
+            else 
                 return null;
-            }
-
+            
             if (muertos > 500 || hombres > 500 || mujeres > 500 || noIdentificado > 500)
                 return null;
 
             string munSanitizado = municipioRaw.Trim('(', ')', ' ', '-', '.', '/', '\\');
             if (EsPalabraProhibida(munSanitizado))
                 return null;
-
             if (string.IsNullOrWhiteSpace(municipioRaw) && string.IsNullOrWhiteSpace(entidadRaw))
                 return null;
 
@@ -695,19 +670,13 @@ namespace ProyectoFisca.Sources.Services
                 (detalle != "Catálogo oficial" && detalle != "Directo");
 
             string motivoCorreccion = "";
-            if (requiereRevision || entidadResuelta == "NO IDENTIFICADA")
-            {
+            if (requiereRevision || entidadResuelta == "NO IDENTIFICADA") 
                 motivoCorreccion = "Entidad o Municipio no resuelto en catálogo oficial";
-            }
-            else if (!string.IsNullOrWhiteSpace(detalle) && detalle != "Catálogo oficial" && detalle != "Directo")
-            {
+            else if (!string.IsNullOrWhiteSpace(detalle) && detalle != "Catálogo oficial" && detalle != "Directo") 
                 motivoCorreccion = detalle;
-            }
-            else if (tuvoCorreccion)
-            {
+            else if (tuvoCorreccion) 
                 motivoCorreccion = $"Corrección aplicada ({entidadRaw.Trim()} / {municipioRaw.Trim()} -> {entidadResuelta} / {municipioResuelto})";
-            }
-
+            
             return new RegistroHomicidioDto
             {
                 Fecha = fecha,
@@ -740,12 +709,9 @@ namespace ProyectoFisca.Sources.Services
                 string posibleEntidad = string.Join(" ", tokens.Take(len));
                 string posibleMun = string.Join(" ", tokens.Skip(len));
 
-                if (entidadesOficiales.Any(e => e.Equals(posibleEntidad, StringComparison.OrdinalIgnoreCase)))
-                {
+                if (entidadesOficiales.Any(e => e.Equals(posibleEntidad, StringComparison.OrdinalIgnoreCase))) 
                     return (posibleEntidad, posibleMun);
-                }
             }
-
             return (string.Join(" ", tokens.Take(tokens.Length - 1)), tokens.Last());
         }
     }

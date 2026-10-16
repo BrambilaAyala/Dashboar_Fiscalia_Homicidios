@@ -78,7 +78,6 @@ namespace ProyectoFisca.DataAccess
                 _logger.LogError(ex, "Error en DataAccess al obtener lista completa de homicidios.");
                 throw;
             }
-
             return lista;
         }
 
@@ -143,7 +142,6 @@ namespace ProyectoFisca.DataAccess
                 _logger.LogError(ex, "Error en DataAccess al obtener homicidios por trimestre.");
                 throw;
             }
-
             return lista;
         }
 
@@ -199,7 +197,6 @@ namespace ProyectoFisca.DataAccess
                 _logger.LogError(ex, "Error en DataAccess al obtener totales por entidad.");
                 throw;
             }
-
             return lista;
         }
 
@@ -245,7 +242,6 @@ namespace ProyectoFisca.DataAccess
                 _logger.LogError(ex, "Error en DataAccess al obtener HomicidiosViewModel.");
                 throw;
             }
-
             return lista;
         }
     }

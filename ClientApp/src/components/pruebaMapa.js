@@ -52,7 +52,7 @@ const POBLACION_INEGI = {
   "YUCATÁN": 2320898,
   "YUCATAN": 2320898,
   "ZACATECAS": 1622138
-};
+}; //Eviatar sacrlo de manera manual la poblacion del INEGI, sacarlo de un documento
 
 export class PruebaMapa extends Component {
   state = {

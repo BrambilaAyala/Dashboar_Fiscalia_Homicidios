@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using ProyectoFisca.Models;
@@ -62,10 +58,7 @@ namespace ProyectoFisca.Pages
             var todos = await _dataAccess.ObtenerHomicidiosAsync();
 
             EntidadesDisponibles = todos.Select(h => h.Entidad)
-                .Where(e => !string.IsNullOrEmpty(e))
-                .Distinct()
-                .OrderBy(e => e)
-                .ToList();
+                .Where(e => !string.IsNullOrEmpty(e)).Distinct().OrderBy(e => e).ToList();
 
             var filtrados = todos.AsQueryable();
 
@@ -79,16 +72,11 @@ namespace ProyectoFisca.Pages
                     h.Fecha.Contains(term));
             }
 
-            if (!string.IsNullOrWhiteSpace(EntidadFiltro) && EntidadFiltro != "TODAS")
-            {
+            if (!string.IsNullOrWhiteSpace(EntidadFiltro) && EntidadFiltro != "TODAS") 
                 filtrados = filtrados.Where(h => h.Entidad.Equals(EntidadFiltro, StringComparison.OrdinalIgnoreCase));
-            }
-
-            if (!string.IsNullOrWhiteSpace(AnioFiltro) && AnioFiltro != "TODOS")
-            {
+            if (!string.IsNullOrWhiteSpace(AnioFiltro) && AnioFiltro != "TODOS") 
                 filtrados = filtrados.Where(h => h.Fecha.StartsWith(AnioFiltro));
-            }
-
+            
             var listaFiltrada = filtrados.ToList();
             TotalRegistros = listaFiltrada.Count;
 
@@ -114,19 +102,14 @@ namespace ProyectoFisca.Pages
                     nombre = $"{g.Key.Municipio} ({g.Key.Entidad})",
                     muertos = g.Sum(x => x.Num_Muertos)
                 })
-                .OrderByDescending(x => x.muertos)
-                .Take(8)
-                .ToList();
+                .OrderByDescending(x => x.muertos).Take(8).ToList();
             TopMunicipiosJson = JsonSerializer.Serialize(topMun);
 
             TotalPaginas = (int)Math.Ceiling((double)TotalRegistros / TamanoPagina);
             if (Pagina < 1) Pagina = 1;
             if (TotalPaginas > 0 && Pagina > TotalPaginas) Pagina = TotalPaginas;
 
-            RegistrosPaginados = listaFiltrada
-                .Skip((Pagina - 1) * TamanoPagina)
-                .Take(TamanoPagina)
-                .ToList();
+            RegistrosPaginados = listaFiltrada.Skip((Pagina - 1) * TamanoPagina).Take(TamanoPagina).ToList();
         }
 
         public async Task<IActionResult> OnPostProcesarEtlAsync([FromForm] string? fechaInicio, [FromForm] string? fechaFin)
@@ -166,7 +149,6 @@ namespace ProyectoFisca.Pages
                 MensajeEtl = $"Error en extracción ETL: {ex.Message}";
                 TipoMensajeEtl = "danger";
             }
-
             return RedirectToPage();
         }
     }

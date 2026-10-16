@@ -80,11 +80,8 @@ namespace ProyectoFisca.Sources.Services
             var resultado = new EtlResultDto { Exitoso = true };
             string carpetaPdf = Path.Combine(_env.ContentRootPath, "DataPdf");
 
-            if (inicio > fin)
-            {
+            if (inicio > fin) 
                 (inicio, fin) = (fin, inicio);
-            }
-
             if ((fin - inicio).TotalDays > 366)
             {
                 var finOriginal = fin;
@@ -99,10 +96,8 @@ namespace ProyectoFisca.Sources.Services
             for (DateTime f = inicio; f <= fin; f = f.AddDays(1))
             {
                 string pathEsperado = Path.Combine(carpetaPdf, $"homicidios_{f:ddMMyyyy}.pdf");
-                if (!File.Exists(pathEsperado) || new FileInfo(pathEsperado).Length <= 1000)
-                {
-                    fechasPendientes.Add(f);
-                }
+                if (!File.Exists(pathEsperado) || new FileInfo(pathEsperado).Length <= 1000) 
+                    fechasPendientes.Add(f);    
             }
 
             if (fechasPendientes.Count > 0)
@@ -132,8 +127,7 @@ namespace ProyectoFisca.Sources.Services
                 {
                     string rutaEsperada = Path.Combine(carpetaPdf, $"homicidios_{fechaActual:ddMMyyyy}.pdf");
                     string? pdfDescargado = File.Exists(rutaEsperada) && new FileInfo(rutaEsperada).Length > 1000 
-                        ? rutaEsperada 
-                        : await _pdfService.DescargarPdfAsync(fechaActual, carpetaPdf);
+                        ? rutaEsperada : await _pdfService.DescargarPdfAsync(fechaActual, carpetaPdf);
 
                     if (string.IsNullOrEmpty(pdfDescargado))
                     {
@@ -155,15 +149,12 @@ namespace ProyectoFisca.Sources.Services
 
                         continue;
                     }
-
                     resultado.ArchivosDescargados++;
 
                     var subResultado = await ProcesarArchivoInternoAsync(pdfDescargado, fechaActual);
-                    if (subResultado.TotalRegistrosExtraidos == 0 && subResultado.Detalles.Any(d => d.Contains("imagen escaneada", StringComparison.OrdinalIgnoreCase)))
-                    {
+                    if (subResultado.TotalRegistrosExtraidos == 0 && subResultado.Detalles.Any(d => d.Contains("imagen escaneada", StringComparison.OrdinalIgnoreCase))) 
                         diasOmitidosImagen++;
-                    }
-
+                    
                     resultado.ArchivosProcesados++;
                     resultado.TotalRegistrosExtraidos += subResultado.TotalRegistrosExtraidos;
                     resultado.TotalRegistrosGuardados += subResultado.TotalRegistrosGuardados;
@@ -176,7 +167,6 @@ namespace ProyectoFisca.Sources.Services
                     resultado.Detalles.Add($"{fechaActual:yyyy-MM-dd}: Error - {ex.Message}");
                 }
             }
-
             resultado.Mensaje = $"Proceso finalizado. {resultado.ArchivosProcesados} archivos procesados ({resultado.TotalRegistrosGuardados} nuevos registros guardados, {diasOmitidosImagen} boletines en imagen escaneada omitidos, {diasNoDisponibles} días no publicados en servidor CNS).";
             return resultado;
         }

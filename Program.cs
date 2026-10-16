@@ -1,4 +1,3 @@
-using System;
 using Microsoft.EntityFrameworkCore;
 using ProyectoFisca.Data;
 using ProyectoFisca.DataAccess;

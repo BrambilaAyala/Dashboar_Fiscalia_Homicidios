@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using ProyectoFisca.Models;
 using ProyectoFisca.Sources.Interface;
 
 namespace ProyectoFisca.Pages
@@ -122,9 +117,7 @@ namespace ProyectoFisca.Pages
                     Mujeres = g.Sum(x => x.Mujeres),
                     No_Identificado = g.Sum(x => x.No_Identificado)
                 })
-                .OrderByDescending(m => m.Num_Muertos)
-                .Take(15)
-                .ToList();
+                .OrderByDescending(m => m.Num_Muertos).Take(15).ToList();
 
             EntidadesJson = JsonSerializer.Serialize(ListaEntidades);
         }

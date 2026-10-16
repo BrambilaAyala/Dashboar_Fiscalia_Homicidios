@@ -1,6 +1,6 @@
+using ProyectoFisca.Sources.Interface;
 using System.Text;
 using System.Text.RegularExpressions;
-using ProyectoFisca.Sources.Interface;
 
 namespace ProyectoFisca.Sources.Services
 {
@@ -12,13 +12,11 @@ namespace ProyectoFisca.Sources.Services
         private readonly Dictionary<string, string> _entidadesPorClave = new();
         private readonly Dictionary<string, string> _entidadesOficiales = new(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, string> _aliasEntidades = new(StringComparer.OrdinalIgnoreCase);
-        
+
         // Mapeo: Nombre Municipio Normalizado -> Lista de (ClaveEntidad, NombreEntidad)
         private readonly Dictionary<string, List<(string ClaveEntidad, string NombreEntidad)>> _municipiosPorNombre = new(StringComparer.OrdinalIgnoreCase);
-        
         // Mapeo: ClaveEntidad -> Lista de Nombres de Municipios de esa entidad
         private readonly Dictionary<string, HashSet<string>> _municipiosPorEntidad = new(StringComparer.OrdinalIgnoreCase);
-
         // Estado contextual de arrastre (Forward Fill)
         private string? _ultimaEntidadActiva = null;
         private bool _inicializado = false;
@@ -122,13 +120,12 @@ namespace ProyectoFisca.Sources.Services
                         _entidadesPorClave[clave] = nombre;
                         _entidadesOficiales[nombre] = nombre;
                         _entidadesOficiales[NormalizarSinAcentos(nombre)] = nombre;
-                        
+
                         if (partes.Length >= 3 && !string.IsNullOrWhiteSpace(partes[2]))
                         {
                             string abrev = partes[2].Trim().ToUpperInvariant();
                             _aliasEntidades[abrev] = nombre;
                         }
-
                         _municipiosPorEntidad[clave] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                     }
                 }
@@ -146,23 +143,16 @@ namespace ProyectoFisca.Sources.Services
                         string nombreMunNormalizado = LimpiarTexto(nombreMun);
 
                         if (!_entidadesPorClave.TryGetValue(claveEnt, out string? nombreEntidad))
-                        {
                             nombreEntidad = "DESCONOCIDO";
-                        }
-
                         if (!_municipiosPorNombre.ContainsKey(nombreMunNormalizado))
-                        {
                             _municipiosPorNombre[nombreMunNormalizado] = new List<(string, string)>();
-                        }
+
                         _municipiosPorNombre[nombreMunNormalizado].Add((claveEnt, nombreEntidad));
 
                         if (_municipiosPorEntidad.ContainsKey(claveEnt))
-                        {
                             _municipiosPorEntidad[claveEnt].Add(nombreMunNormalizado);
-                        }
                     }
                 }
-
                 _logger.LogInformation("Catálogos cargados exitosamente: {Entidades} entidades y {Municipios} nombres de municipios",
                     _entidadesOficiales.Count, _municipiosPorNombre.Count);
             }
@@ -202,8 +192,9 @@ namespace ProyectoFisca.Sources.Services
             {
                 // PASO 3: Fuzzy Matching con las 32 entidades oficiales
                 var mejorFuzzy = _entidadesOficiales.Values.Distinct()
-                    .Select(e => new { Entidad = e, Similitud = CalcularSimilitudJaroWinkler(entLimpia, e) })
-                    .OrderByDescending(x => x.Similitud).FirstOrDefault();
+                    .Select(e => new { 
+                        Entidad = e, Similitud = CalcularSimilitudJaroWinkler(entLimpia, e) 
+                    }).OrderByDescending(x => x.Similitud).FirstOrDefault();
 
                 if (mejorFuzzy != null && mejorFuzzy.Similitud >= 0.82)
                 {
@@ -281,8 +272,9 @@ namespace ProyectoFisca.Sources.Services
                 {
                     // Buscar coincidencia difusa del municipio dentro del estado
                     var mejorMunFuzzy = municipiosDeEstaEntidad
-                        .Select(m => new { Municipio = m, Similitud = CalcularSimilitudJaroWinkler(munLimpia, m) })
-                        .OrderByDescending(x => x.Similitud).FirstOrDefault();
+                        .Select(m => new { 
+                            Municipio = m, Similitud = CalcularSimilitudJaroWinkler(munLimpia, m) 
+                        }).OrderByDescending(x => x.Similitud).FirstOrDefault();
 
                     if (mejorMunFuzzy != null && mejorMunFuzzy.Similitud >= 0.85)
                     {
@@ -291,7 +283,6 @@ namespace ProyectoFisca.Sources.Services
                     }
                 }
             }
-
             return (entidadResuelta, municipioFinal, requiereRevision, detalle);
         }
 
@@ -313,9 +304,7 @@ namespace ProyectoFisca.Sources.Services
             foreach (char c in normalizada)
             {
                 if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark)
-                {
                     sb.Append(c);
-                }
             }
             return sb.ToString().Normalize(NormalizationForm.FormC).ToUpperInvariant();
         }
@@ -325,10 +314,11 @@ namespace ProyectoFisca.Sources.Services
             if (string.IsNullOrEmpty(s1) || string.IsNullOrEmpty(s2)) return 0.0;
             if (s1.Equals(s2, StringComparison.OrdinalIgnoreCase)) return 1.0;
 
-            int len1 = s1.Length, len2 = s2.Length;
-            int matchDistance = Math.Max(len1, len2) / 2 - 1;
-            bool[] s1Matches = new bool[len1], s2Matches = new bool[len2];
-            int matches = 0, transpositions = 0;
+            //Porque se detiene aqui??
+            int len1 = s1.Length, len2 = s2.Length; // Longitudes de las cadenas
+            int matchDistance = Math.Max(len1, len2) / 2 - 1; // Distancia máxima para considerar coincidencias
+            bool[] s1Matches = new bool[len1], s2Matches = new bool[len2]; // Arrays para marcar coincidencias
+            int matches = 0, transpositions = 0; // Contador de coincidencias y transposiciones
 
             for (int i = 0; i < len1; i++)
             {
